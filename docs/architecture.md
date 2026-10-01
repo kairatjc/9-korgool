@@ -6,7 +6,7 @@
  Браузер (React SPA / PWA)                     Сервер (Node.js)
 ┌──────────────────────────┐   HTTPS (REST)   ┌──────────────────────────┐
 │ UI: доска, лобби, профиль│ ───────────────▶ │ Fastify: auth, профиль,  │
-│ Zustand store            │                  │ история, рейтинги        │
+│ Zustand store            │                  │ история партий           │
 │ @korgool/engine          │   WebSocket      │                          │
 │ Web Worker: бот          │ ◀──────────────▶ │ Socket.IO: партии,       │
 └──────────────────────────┘  (Socket.IO)     │ подбор, часы             │
@@ -70,21 +70,20 @@ function parse(str: string): GameState;
 
 | Направление | Событие | Данные |
 |---|---|---|
-| C → S | `queue:join` / `queue:leave` | `{ timeControl, rated }` |
+| C → S | `queue:join` / `queue:leave` | `{ timeControl }` |
 | C → S | `game:create` | `{ timeControl, color }` → `{ gameId, inviteUrl }` |
 | C → S | `game:join` | `{ gameId }` |
 | C → S | `game:move` | `{ gameId, pit, ply }` (`ply` — номер полухода, защита от дублей) |
 | C → S | `game:resign` / `game:draw-offer` / `game:draw-answer` | |
 | S → C | `game:start` | `{ gameId, players, state, clocks }` |
 | S → C | `game:moved` | `{ pit, events, state, clocks, ply }` |
-| S → C | `game:over` | `{ result, reason, ratingDiff }` |
+| S → C | `game:over` | `{ result, reason }` |
 | S → C | `game:sync` | полное состояние (после реконнекта) |
 | S → C | `opponent:status` | `{ online: boolean }` |
 
 **Обработка хода на сервере:** получить партию из Redis → проверить, что ход игрока и `ply`
 совпадает → `engine.applyMove` → пересчитать часы по серверному времени → сохранить
-в Redis → разослать `game:moved` в комнату → при окончании партии записать её в Postgres
-и обновить рейтинги.
+в Redis → разослать `game:moved` в комнату → при окончании партии записать её в Postgres.
 
 **Часы** считаются только на сервере (время приёма хода). Клиент показывает локальный
 отсчёт и корректируется по каждому `game:moved`. Флаг времени проверяет серверный таймер.
@@ -93,15 +92,15 @@ function parse(str: string): GameState;
 
 ```
 users        (id, username, google_id, phone /* в планах, nullable */, avatar_url, country, locale, created_at, is_guest)
-ratings      (user_id, time_class, rating, rd, volatility, games_count)
-games        (id, white_id, black_id, time_control, rated, status, result, reason,
+ratings      (user_id, time_class, rating, rd, volatility, games_count)   -- в планах, вместе с рейтингом
+games        (id, white_id, black_id, time_control, status, result, reason,
               moves TEXT,  -- "7 3 9 5 ..."
               final_position TEXT, started_at, ended_at)
 friendships  (user_id, friend_id, status, created_at)   -- в планах, вместе с друзьями
-puzzles      (id, position, solution, rating)
+puzzles      (id, position, solution, difficulty)
 ```
 
-**Redis:** `game:{id}` — состояние активной партии; `queue:{timeControl}` — sorted set по рейтингу;
+**Redis:** `game:{id}` — состояние активной партии; `queue:{timeControl}` — FIFO-список ожидающих (первые двое образуют пару);
 `online:{userId}` — присутствие с TTL *(в планах, для онлайн-статусов друзей)*.
 
 ## 6. Безопасность и честная игра
