@@ -97,12 +97,12 @@ ratings      (user_id, time_class, rating, rd, volatility, games_count)
 games        (id, white_id, black_id, time_control, rated, status, result, reason,
               moves TEXT,  -- "7 3 9 5 ..."
               final_position TEXT, started_at, ended_at)
-friendships  (user_id, friend_id, status, created_at)
+friendships  (user_id, friend_id, status, created_at)   -- в планах, вместе с друзьями
 puzzles      (id, position, solution, rating)
 ```
 
 **Redis:** `game:{id}` — состояние активной партии; `queue:{timeControl}` — sorted set по рейтингу;
-`online:{userId}` — присутствие с TTL.
+`online:{userId}` — присутствие с TTL *(в планах, для онлайн-статусов друзей)*.
 
 ## 6. Безопасность и честная игра
 
