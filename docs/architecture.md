@@ -92,7 +92,7 @@ function parse(str: string): GameState;
 ## 5. Модель данных (PostgreSQL)
 
 ```
-users        (id, username, phone, google_id, avatar_url, country, locale, created_at, is_guest)
+users        (id, username, google_id, phone /* в планах, nullable */, avatar_url, country, locale, created_at, is_guest)
 ratings      (user_id, time_class, rating, rd, volatility, games_count)
 games        (id, white_id, black_id, time_control, rated, status, result, reason,
               moves TEXT,  -- "7 3 9 5 ..."
@@ -107,8 +107,8 @@ puzzles      (id, position, solution, rating)
 ## 6. Безопасность и честная игра
 
 - Все ходы проверяет сервер; клиенту не доверяем.
-- Rate limiting на REST и WebSocket (ходы, запросы SMS-кодов).
-- Защита SMS OTP: лимиты на номер и IP, капча после нескольких попыток, хранение только хеша кода.
+- Rate limiting на REST и WebSocket (ходы, создание партий).
+- *(в планах, вместе со входом по SMS)* защита OTP: лимиты на номер и IP, капча после нескольких попыток, хранение только хеша кода.
 - Базовый античит: сравнение ходов игрока с ходами сильного бота по статистике партий (после MVP).
 - HTTPS везде, cookie сессии `HttpOnly` + `SameSite`.
 
