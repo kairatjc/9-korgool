@@ -1,8 +1,8 @@
 # Дорожная карта
 
 ## Этап 0 — Фундамент (1–2 недели)
-- [ ] Монорепозиторий (pnpm + Turborepo), ESLint/Prettier, GitHub Actions
-- [ ] `@korgool/engine`: правила, тесты на все случаи из [rules.md](rules.md)
+- [x] Монорепозиторий (pnpm + Turborepo), ESLint/Prettier, GitHub Actions
+- [x] `@korgool/engine`: правила, тесты на все случаи из [rules.md](rules.md)
 - [ ] Подтвердить спорные моменты правил (rules.md §8)
 
 ## Этап 1 — Играбельный прототип (2–3 недели)
