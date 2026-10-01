@@ -9,7 +9,7 @@
 │ Zustand store            │                  │ история, рейтинги        │
 │ @korgool/engine          │   WebSocket      │                          │
 │ Web Worker: бот          │ ◀──────────────▶ │ Socket.IO: партии,       │
-└──────────────────────────┘  (Socket.IO)     │ подбор, чат, часы        │
+└──────────────────────────┘  (Socket.IO)     │ подбор, часы             │
                                               │ @korgool/engine          │
                                               └─────┬──────────────┬─────┘
                                                     │              │
@@ -75,7 +75,6 @@ function parse(str: string): GameState;
 | C → S | `game:join` | `{ gameId }` |
 | C → S | `game:move` | `{ gameId, pit, ply }` (`ply` — номер полухода, защита от дублей) |
 | C → S | `game:resign` / `game:draw-offer` / `game:draw-answer` | |
-| C → S | `chat:send` | `{ gameId, text }` |
 | S → C | `game:start` | `{ gameId, players, state, clocks }` |
 | S → C | `game:moved` | `{ pit, events, state, clocks, ply }` |
 | S → C | `game:over` | `{ result, reason, ratingDiff }` |
@@ -93,14 +92,13 @@ function parse(str: string): GameState;
 ## 5. Модель данных (PostgreSQL)
 
 ```
-users        (id, username, email, avatar_url, country, locale, created_at, is_guest)
+users        (id, username, phone, google_id, avatar_url, country, locale, created_at, is_guest)
 ratings      (user_id, time_class, rating, rd, volatility, games_count)
 games        (id, white_id, black_id, time_control, rated, status, result, reason,
               moves TEXT,  -- "7 3 9 5 ..."
               final_position TEXT, started_at, ended_at)
 friendships  (user_id, friend_id, status, created_at)
 puzzles      (id, position, solution, rating)
-reports      (id, reporter_id, target_id, game_id, reason, created_at)
 ```
 
 **Redis:** `game:{id}` — состояние активной партии; `queue:{timeControl}` — sorted set по рейтингу;
@@ -109,8 +107,8 @@ reports      (id, reporter_id, target_id, game_id, reason, created_at)
 ## 6. Безопасность и честная игра
 
 - Все ходы проверяет сервер; клиенту не доверяем.
-- Rate limiting на REST и WebSocket (ходы, чат).
-- Фильтр нецензурной лексики в чате, жалобы, модерация.
+- Rate limiting на REST и WebSocket (ходы, запросы SMS-кодов).
+- Защита SMS OTP: лимиты на номер и IP, капча после нескольких попыток, хранение только хеша кода.
 - Базовый античит: сравнение ходов игрока с ходами сильного бота по статистике партий (после MVP).
 - HTTPS везде, cookie сессии `HttpOnly` + `SameSite`.
 
