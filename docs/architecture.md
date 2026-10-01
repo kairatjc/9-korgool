@@ -70,7 +70,7 @@ function parse(str: string): GameState;
 
 | Направление | Событие | Данные |
 |---|---|---|
-| C → S | `queue:join` / `queue:leave` | `{ timeControl }` |
+| C → S | `queue:join` / `queue:leave` | — (контроль времени фиксирован: 5+3) |
 | C → S | `game:create` | `{ timeControl, color }` → `{ gameId, inviteUrl }` |
 | C → S | `game:join` | `{ gameId }` |
 | C → S | `game:move` | `{ gameId, pit, ply }` (`ply` — номер полухода, защита от дублей) |
@@ -100,7 +100,7 @@ friendships  (user_id, friend_id, status, created_at)   -- в планах, вм
 puzzles      (id, position, solution, difficulty)
 ```
 
-**Redis:** `game:{id}` — состояние активной партии; `queue:{timeControl}` — FIFO-список ожидающих (первые двое образуют пару);
+**Redis:** `game:{id}` — состояние активной партии; `queue` — одна общая FIFO-очередь ожидающих, контроль 5+3 (первые двое образуют пару);
 `online:{userId}` — присутствие с TTL *(в планах, для онлайн-статусов друзей)*.
 
 ## 6. Безопасность и честная игра
