@@ -172,4 +172,37 @@ describe('сервер партий', () => {
     await send(b.socket, 'game:draw-answer', { gameId, accept: true });
     expect(await over).toMatchObject({ result: 'draw', reason: 'draw_agreed' });
   });
+
+  it('очередь подбора: двое получают партию 5+3 и входят в неё', async () => {
+    const a = await guest();
+    const b = await guest();
+    expect(await send(a.socket, 'queue:join', {})).toEqual({ ok: true });
+    const matchedA = next(a.socket, 'queue:matched');
+    const matchedB = next(b.socket, 'queue:matched');
+    await send(b.socket, 'queue:join', {});
+    const { gameId } = await matchedA;
+    expect(await matchedB).toEqual({ gameId });
+
+    const joinedA = await send(a.socket, 'game:join', { gameId });
+    const joinedB = await send(b.socket, 'game:join', { gameId });
+    const sides = [joinedA, joinedB].map((r) => (r.ok ? (r['game'] as GameSnapshot).you : null));
+    expect(sides.sort()).toEqual(['black', 'white']);
+    expect(joinedA).toMatchObject({
+      ok: true,
+      game: { kind: 'queue', phase: 'playing', timeControl: { initial: 300, increment: 3 } },
+    });
+  });
+
+  it('ушедший из очереди не получает соперника', async () => {
+    const a = await guest();
+    const b = await guest();
+    await send(a.socket, 'queue:join', {});
+    await send(a.socket, 'queue:leave', {});
+    await send(b.socket, 'queue:join', {});
+    // Если бы Алиса осталась в очереди, Бек сыграл бы с ней, и Чолпон некого было бы найти.
+    const c = await guest();
+    const matchedC = next(c.socket, 'queue:matched');
+    await send(c.socket, 'queue:join', {});
+    expect(await matchedC).toHaveProperty('gameId');
+  });
 });

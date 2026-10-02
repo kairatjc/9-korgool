@@ -12,7 +12,7 @@ import type {
   ServerToClientEvents,
   TimeControl,
 } from '@korgool/protocol';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Socket } from 'socket.io-client';
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -81,6 +81,40 @@ export function createGame(timeControl: TimeControl, color: ColorChoice) {
     timeControl,
     color,
   });
+}
+
+/**
+ * Stand in the random-opponent queue while mounted; `onMatched` gets the new game's code.
+ * Leaving the screen (cancel, the bot offer) leaves the queue.
+ */
+export function useQueue(onMatched: (gameId: string) => void): void {
+  const matched = useRef(onMatched);
+  matched.current = onMatched;
+  useEffect(() => {
+    let active = true;
+    let socket: Client | null = null;
+    const join = () => void request('queue:join', {});
+    const onMatch = ({ gameId }: { gameId: string }) => {
+      active = false;
+      matched.current(gameId);
+    };
+    void getSocket().then((s) => {
+      if (!active) return;
+      socket = s;
+      s.on('queue:matched', onMatch);
+      // Join once connected; after a reconnect the server has forgotten us, so stand in line again.
+      s.on('connect', join);
+      if (s.connected) join();
+    });
+    return () => {
+      const wasActive = active;
+      active = false;
+      if (!socket) return;
+      socket.off('queue:matched', onMatch);
+      socket.off('connect', join);
+      if (wasActive) void request('queue:leave', {});
+    };
+  }, []);
 }
 
 /** m:ss, rounded up so that 0:00 means the flag. */

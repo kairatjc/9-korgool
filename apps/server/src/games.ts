@@ -2,6 +2,7 @@ import { randomInt } from 'node:crypto';
 import {
   GAME_ID_ALPHABET,
   GAME_ID_LENGTH,
+  QUEUE_TIME_CONTROL,
   type ColorChoice,
   type Player,
   type Side,
@@ -50,6 +51,23 @@ export class GameRegistry {
   }
 
   create(creator: Player, timeControl: TimeControl, color: ColorChoice): OnlineGame {
+    const game = this.newGame(timeControl);
+    const side: Side = color === 'random' ? randomSide() : color;
+    game.seat(side, creator);
+    return game;
+  }
+
+  /** Партия из очереди подбора: 5+3, цвета случайно. Вызывающий подключает игроков и вызывает `start()`. */
+  createMatched(a: Player, b: Player): OnlineGame {
+    const game = this.newGame(QUEUE_TIME_CONTROL);
+    game.kind = 'queue';
+    const [white, black] = randomSide() === 'white' ? [a, b] : [b, a];
+    game.seat('white', white);
+    game.seat('black', black);
+    return game;
+  }
+
+  private newGame(timeControl: TimeControl): OnlineGame {
     const id = this.newId();
     const output = this.outputFor(id);
     const game = new OnlineGame(
@@ -69,8 +87,6 @@ export class GameRegistry {
       this.scheduler,
       this.timeouts,
     );
-    const side: Side = color === 'random' ? (randomInt(2) === 0 ? 'white' : 'black') : color;
-    game.seat(side, creator);
     this.games.set(id, game);
     this.expireIn(id, this.waitingTtlMs);
     return game;
@@ -109,4 +125,8 @@ export class GameRegistry {
     this.expiry.get(id)?.();
     this.expiry.delete(id);
   }
+}
+
+function randomSide(): Side {
+  return randomInt(2) === 0 ? 'white' : 'black';
 }

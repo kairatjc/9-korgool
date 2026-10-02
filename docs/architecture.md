@@ -76,7 +76,7 @@ function parse(str: string): GameState;
 
 | Направление | Событие | Данные |
 |---|---|---|
-| C → S | `queue:join` / `queue:leave` | — (контроль времени фиксирован: 5+3) *(следующий срез)* |
+| C → S | `queue:join` / `queue:leave` | `{}` — контроль времени фиксирован: 5+3; первые двое в очереди образуют пару |
 | C → S | `game:create` | `{ timeControl, color }` → `{ game, inviteUrl }` |
 | C → S | `game:join` | `{ gameId }` → `{ game }` — занять свободное место или вернуться в свою партию (реконнект) |
 | C → S | `game:move` | `{ gameId, pit, ply }` (`ply` — номер полухода, защита от дублей) |
@@ -87,6 +87,7 @@ function parse(str: string): GameState;
 | S → C | `game:over` | `{ gameId, result, reason, clocks }` |
 | S → C | `game:draw-offered` / `game:draw-declined` | `{ gameId, by }` / `{ gameId }` |
 | S → C | `opponent:status` | `{ gameId, online }` |
+| S → C | `queue:matched` | `{ gameId }` — партия уже создана и началась, клиент входит через `game:join` |
 
 `GameSnapshot` — полное состояние: игроки, `you` (за кого играет получатель), позиция, ходы,
 часы, предложение ничьей, кто онлайн, результат. Его возвращают `game:create` и `game:join`,

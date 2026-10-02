@@ -16,6 +16,7 @@ import type {
   GameOver,
   GameOverReason,
   GameResult,
+  GameKind,
   GameSnapshot,
   OpponentStatus,
   Player,
@@ -58,6 +59,7 @@ type Phase = GameSnapshot['phase'];
  */
 export class OnlineGame {
   readonly seats: { white: Player | null; black: Player | null } = { white: null, black: null };
+  kind: GameKind = 'friend';
   phase: Phase = 'waiting';
   state: GameState = initialState();
   readonly moves: Pit[] = [];
@@ -255,6 +257,7 @@ export class OnlineGame {
   snapshot(forPlayerId: string | null): GameSnapshot {
     return {
       gameId: this.id,
+      kind: this.kind,
       phase: this.phase,
       timeControl: this.timeControl,
       players: { white: this.seats.white, black: this.seats.black },

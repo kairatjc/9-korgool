@@ -149,18 +149,19 @@ function OnlineBoard({ online, game }: { online: OnlineGame; game: GameSnapshot 
   };
   const time = timeControlLabel(game.timeControl);
   const since = online.opponentOfflineSince;
+  const queue = game.kind === 'queue';
 
   return (
     <GameScreen
-      mode="friend"
-      title={time ? `${t('game.modeFriend')} · ${time}` : t('game.modeFriend')}
+      mode={queue ? 'online' : 'friend'}
+      title={`${t(queue ? 'game.modeOnline' : 'game.modeFriend')}${time ? ` · ${time}` : ''}`}
       initial={start.state}
       moves={start.moves}
       me={me}
       players={{ me: person(me), opponent: person(opp) }}
       clocks={game.clocks ? { me: formatClock(left(me)), opponent: formatClock(left(opp)) } : null}
       onResign={online.resign}
-      onRematch={go('friend-create')}
+      onRematch={go(queue ? 'matchmaking' : 'friend-create')}
       online={{
         moves: game.moves,
         startPly: start.ply,
