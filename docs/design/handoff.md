@@ -19,9 +19,17 @@
 
 ## 1. Handoff хранится в репозитории как есть
 
-- Пакет из Claude Design кладётся в `design/handoff/` **без изменений** и коммитится отдельным
+- Пакет из Claude Design кладётся в `design/` **без изменений** и коммитится отдельным
   коммитом. Это эталон. Любая новая итерация дизайна — новый коммит туда же, видно diff.
-- Прототип можно открыть локально: `pnpm design:serve` (статический сервер на `design/handoff/`).
+  Раскладка повторяет проект Claude Design:
+  - `design/handoff/` — эталонный код (токены, компоненты, экраны, доска, анимации, тексты);
+  - `design/Экраны.dc.html`, `Directions.dc.html`, `board.js`, `support.js`, `uploads/` —
+    холст Claude Design (обзор всех экранов, ранние направления); `README.md` пакета лежит как
+    `design/BUNDLE-README.md`.
+- `design/` исключена из Prettier и ESLint — файлы не переформатируются, чтобы diff итераций
+  оставался чистым.
+- Прототип можно открыть локально: `pnpm design:serve` (статический сервер на `design/`,
+  порт 4500): эталон — `/handoff/index.html?screen=…`, обзор всех экранов — `/Экраны.dc.html`.
 
 ## 2. Перенос: копируем, а не перерисовываем
 
@@ -36,6 +44,18 @@
 | иконки Lucide | `lucide-react` | те же имена |
 | шрифты | `<link>` в `index.html` | те же семейства и веса |
 
+Как это сделано в `apps/web`:
+- `src/styles/tokens.css` — копия байт в байт; `src/styles/components/*.css` — `components.css`, разрезанный по
+  секциям, подключается из `src/styles/index.css` в исходном порядке. Тест `src/styles/styles.test.ts` проверяет,
+  что склейка частей равна оригиналу, поэтому стили нельзя «подправить» незаметно.
+- `src/board/geometry.ts`, `Board.tsx`, `Diagram.tsx` — порт `board.js`; тест `src/board/board.test.tsx`
+  сравнивает разметку React-доски с `renderBoard` из handoff на всех фикстурах и состояниях лунок, а события
+  движка — с `computeMove`.
+- `src/board/motion.ts` — порт `motion.js` (те же токены длительностей и easing).
+- `src/i18n/{ru,ky,en}.json` — из `copy.json`; тест сверяет строки с оригиналом (отличия — только из
+  `design/DEVIATIONS.md`).
+- Tailwind и shadcn/ui пока не понадобились: вся раскладка есть в handoff.
+
 Запреты для реализации:
 - не подменять стили дефолтами shadcn/ui: shadcn (Radix) используется только как **поведение**
   (фокус, модалки, доступность), внешний вид — классы из handoff;
@@ -46,13 +66,16 @@
 
 Для каждого экрана из промпта (раздел 6.4) есть пара:
 
-- **эталон**: `design/handoff/index.html?screen=X&fixture=Y&state=Z&static=1`
+- **эталон**: `/handoff/index.html?screen=X&fixture=Y&state=Z&static=1` (из `pnpm design:serve`)
 - **реализация**: dev-маршрут `/__design?screen=X&fixture=Y&state=Z&static=1` в `apps/web`
   (только в dev-сборке; рендерит тот же экран из той же фикстуры, через `parse()` движка).
 
+Dev-сервер `apps/web` раздаёт эталон по адресу `/__handoff/` — обе страницы открываются с одного сервера.
+Список экранов — `apps/web/src/design/screens.ts`. Запуск: `pnpm --filter @korgool/web test:visual`.
+
 Playwright-тест (`apps/web/e2e/visual.spec.ts`) снимает обе страницы в одинаковых условиях —
 вьюпорты **360×780, 390×844, 1440×900**, шрифты загружены, анимации выключены — и сравнивает
-через `pixelmatch`:
+через `pixelmatch` (Lucide для эталона берётся из `node_modules`, а не с unpkg):
 
 - порог: **≤ 0.5 %** отличающихся пикселей на экран (сглаживание шрифтов даёт шум);
 - при превышении — тест падает и сохраняет `expected.png`, `actual.png`, `diff.png`
@@ -77,6 +100,6 @@ Playwright-тест (`apps/web/e2e/visual.spec.ts`) снимает обе стр
 ## 6. Как передавать новую итерацию дизайна
 
 1. В Claude Design попросить: «Обнови handoff по тем же требованиям (раздел 6 промпта)».
-2. Положить пакет в `design/handoff/`, закоммитить.
+2. Положить пакет в `design/` (с той же раскладкой), закоммитить.
 3. Попросить Claude Code: «Синхронизируй реализацию с новым handoff». Он смотрит diff
    эталона, переносит изменения и доводит визуальные тесты до зелёного.

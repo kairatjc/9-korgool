@@ -1,0 +1,12 @@
+/* ── Field / Share / RoomCode / Waiting ───────── */
+.k-field { display: flex; align-items: center; gap: var(--space-3); min-height: var(--size-button); padding: 0 var(--space-2) 0 var(--space-6); border: var(--border-thin) solid var(--color-line-strong); border-radius: var(--radius-md); background: var(--color-surface); }
+.k-field__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-sm); color: var(--color-ink-muted); }
+.k-share { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.k-room-code { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-8); border: var(--border-thick) dashed var(--color-line-strong); border-radius: var(--radius-lg); }
+.k-room-code__label { font-size: var(--text-xs); color: var(--color-ink-muted); }
+.k-room-code__value { font-family: var(--font-display); font-size: var(--text-code); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-code); line-height: var(--leading-tight); }
+.k-summary { display: flex; justify-content: center; gap: var(--space-3); }
+.k-waiting { display: flex; align-items: center; justify-content: center; gap: var(--space-4); color: var(--color-ink-muted); font-weight: var(--weight-medium); }
+.k-spinner { width: var(--size-spinner); height: var(--size-spinner); flex: none; border: var(--border-focus) solid var(--color-line-strong); border-top-color: var(--color-ink); border-radius: var(--radius-full); animation: k-spin var(--duration-spin) linear infinite; }
+.k-spinner--lg { width: var(--size-spinner-lg); height: var(--size-spinner-lg); }
+

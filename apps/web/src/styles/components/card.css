@@ -1,0 +1,6 @@
+/* ── Card ─────────────────────────────────────── */
+.k-card { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-8); border: var(--border-thin) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-card); text-align: left; }
+.k-card__title { font-size: var(--text-lg); font-weight: var(--weight-semibold); line-height: var(--leading-snug); }
+.k-card__text { color: var(--color-ink-muted); text-wrap: pretty; }
+.k-card__actions { display: flex; flex-direction: column; gap: var(--space-3); }
+

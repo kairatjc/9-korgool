@@ -1,0 +1,8 @@
+/* ── CodeInput ────────────────────────────────── */
+.k-code { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-3); }
+.k-code__cell { height: var(--size-code-cell); display: flex; align-items: center; justify-content: center; border: var(--border-thick) solid var(--color-line-strong); border-radius: var(--radius-md); background: var(--color-surface); font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--weight-semibold); text-transform: uppercase; }
+.k-code__cell--filled { border-color: var(--color-ink); }
+.k-code__cell--focus { border-color: var(--color-accent); box-shadow: var(--shadow-focus-ring); }
+.k-code__cell--focus::after { content: ""; width: var(--size-caret); height: var(--size-caret-h); background: var(--color-accent); animation: k-blink var(--duration-caret) steps(1) infinite; }
+.k-code__input { position: absolute; inset: 0; opacity: 0; width: 100%; border: 0; cursor: text; text-transform: uppercase; }
+

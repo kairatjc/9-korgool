@@ -1,0 +1,9 @@
+/* ── Menu (home) ──────────────────────────────── */
+.k-menu { display: flex; flex-direction: column; border: var(--border-thin) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); overflow: hidden; }
+.k-menu__item { display: flex; align-items: center; gap: var(--space-6); width: 100%; min-height: var(--size-row); padding: 0 var(--space-7); border: 0; background: transparent; text-align: left; font-weight: var(--weight-medium); cursor: pointer; }
+.k-menu__item + .k-menu__item { border-top: var(--border-thin) solid var(--color-line); }
+.k-menu__item:hover { background: var(--color-bg); }
+.k-menu__icon { width: var(--size-avatar); height: var(--size-avatar); flex: none; display: grid; place-items: center; border-radius: var(--radius-md); background: var(--color-surface-sunken); }
+.k-menu__label { flex: 1; min-width: 0; }
+.k-menu__chevron { color: var(--color-ink-muted); }
+

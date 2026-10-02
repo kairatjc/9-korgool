@@ -1,0 +1,18 @@
+/* ── FieldGroup / Choice / Segmented / Chips ─── */
+.k-field-group { display: flex; flex-direction: column; gap: var(--space-4); border: 0; padding: 0; margin: 0; min-width: 0; }
+.k-field-group__label { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-ink-muted); padding: 0; }
+.k-choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.k-choice { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-height: var(--size-choice); padding: var(--space-6) var(--space-7); border: var(--border-thick) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); text-align: left; cursor: pointer; }
+.k-choice:hover { border-color: var(--color-line-strong); }
+.k-choice--selected, .k-choice--selected:hover { border-color: var(--color-ink); box-shadow: inset 0 0 0 var(--border-thin) var(--color-ink); }
+.k-choice__title { font-weight: var(--weight-semibold); }
+.k-choice__sub { font-size: var(--text-xs); color: var(--color-ink-muted); line-height: var(--leading-snug); }
+
+.k-segmented { display: flex; gap: var(--space-1); padding: var(--space-1); border-radius: var(--radius-md); background: var(--color-surface-sunken); }
+.k-segmented__option { flex: 1; min-width: 0; min-height: var(--size-tap); display: flex; align-items: center; justify-content: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-ink-muted); font-size: var(--text-sm); font-weight: var(--weight-medium); line-height: var(--leading-snug); text-align: center; cursor: pointer; }
+.k-segmented__option--selected { background: var(--color-surface); color: var(--color-ink); box-shadow: var(--shadow-segment); }
+
+.k-chips { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.k-chip { min-height: var(--size-tap); padding: 0 var(--space-7); border: var(--border-thin) solid var(--color-line-strong); border-radius: var(--radius-full); background: var(--color-surface); font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; cursor: pointer; }
+.k-chip--selected { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-ink-inverse); }
+

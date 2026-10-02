@@ -1,0 +1,12 @@
+/* ── TopBar ───────────────────────────────────── */
+.k-topbar { height: var(--size-topbar); flex: none; display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-3); }
+.k-topbar__title { flex: 1; min-width: 0; text-align: center; font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--color-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-topbar__spacer { flex: 1; }
+.k-topbar__logo { display: none; }
+.k-topbar__end { display: flex; align-items: center; gap: var(--space-2); min-width: var(--size-tap); justify-content: flex-end; }
+@media (min-width: 768px) {
+  .k-topbar { height: var(--size-header); padding: 0 var(--space-10); gap: var(--space-7); border-bottom: var(--border-thin) solid var(--color-line); }
+  .k-topbar__logo { display: flex; }
+  .k-topbar__title { text-align: left; font-size: var(--text-md); }
+}
+
