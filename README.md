@@ -17,6 +17,8 @@
 | [docs/tech-stack.md](docs/tech-stack.md)                       | Выбор технологий и обоснование                              |
 | [docs/architecture.md](docs/architecture.md)                   | Архитектура, структура репозитория, протокол, модель данных |
 | [docs/roadmap.md](docs/roadmap.md)                             | Этапы разработки (MVP → релиз)                              |
+| [docs/design/handoff.md](docs/design/handoff.md)               | Как handoff из Claude Design переносится в код              |
+| [design/handoff/README.md](design/handoff/README.md)           | Эталонный дизайн (направление 1a «Жаңгак»): экраны, токены  |
 
 ## Коротко о стеке
 
@@ -34,6 +36,7 @@ pnpm test        # тесты всех пакетов
 pnpm typecheck   # проверка типов
 pnpm lint        # ESLint
 pnpm format      # Prettier
+pnpm design:serve  # прототип дизайна: http://127.0.0.1:4500/handoff/index.html
 ```
 
 | Пакет                                | Что внутри                                                                               |
