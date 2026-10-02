@@ -46,6 +46,9 @@ export const TIME_CONTROL_PRESETS = {
   '15+10': { initial: 900, increment: 10 },
 } as const satisfies Record<string, NonNullable<TimeControl>>;
 
+/** Случайный подбор: одна общая очередь с фиксированным контролем 5+3 (gameplay-and-features.md §1.2). */
+export const QUEUE_TIME_CONTROL = TIME_CONTROL_PRESETS['5+3'];
+
 export const colorChoiceSchema = z.enum(['white', 'black', 'random']);
 export type ColorChoice = z.infer<typeof colorChoiceSchema>;
 
@@ -111,9 +114,14 @@ export type GameOverReason = z.infer<typeof gameOverReasonSchema>;
 
 export const gamePhaseSchema = z.enum(['waiting', 'playing', 'over']);
 
+/** Откуда партия: приглашение друга или очередь подбора. */
+export const gameKindSchema = z.enum(['friend', 'queue']);
+export type GameKind = z.infer<typeof gameKindSchema>;
+
 /** Полное состояние партии: ответ на создание/вход и восстановление после реконнекта. */
 export const gameSnapshotSchema = z.object({
   gameId: gameIdSchema,
+  kind: gameKindSchema,
   phase: gamePhaseSchema,
   timeControl: timeControlSchema,
   players: z.object({ white: playerSchema.nullable(), black: playerSchema.nullable() }),
@@ -148,6 +156,10 @@ export const moveSchema = z.object({
   ply: z.number().int().min(0),
 });
 export type MovePayload = z.infer<typeof moveSchema>;
+
+/** События без данных (`queue:join`, `queue:leave`). */
+export const emptySchema = z.object({});
+export type EmptyPayload = z.infer<typeof emptySchema>;
 
 export const drawAnswerSchema = z.object({ gameId: gameIdSchema, accept: z.boolean() });
 export type DrawAnswerPayload = z.infer<typeof drawAnswerSchema>;
@@ -215,6 +227,9 @@ export interface ClientToServerEvents {
   'game:resign': (payload: GameRefPayload, ack: AckFn) => void;
   'game:draw-offer': (payload: GameRefPayload, ack: AckFn) => void;
   'game:draw-answer': (payload: DrawAnswerPayload, ack: AckFn) => void;
+  /** Встать в очередь случайного подбора (5+3). Повторный вход ничего не меняет. */
+  'queue:join': (payload: EmptyPayload, ack: AckFn) => void;
+  'queue:leave': (payload: EmptyPayload, ack: AckFn) => void;
 }
 
 /** События, которые шлёт сервер. */
@@ -228,4 +243,6 @@ export interface ServerToClientEvents {
   /** Предложение ничьей отклонено (тому, кто предлагал). */
   'game:draw-declined': (payload: GameRefPayload) => void;
   'opponent:status': (payload: OpponentStatus) => void;
+  /** Соперник найден: партия уже создана и началась, клиент входит в неё через `game:join`. */
+  'queue:matched': (payload: GameRefPayload) => void;
 }

@@ -1,6 +1,7 @@
 import {
   createGameSchema,
   drawAnswerSchema,
+  emptySchema,
   gameRefSchema,
   moveSchema,
   type Ack,
@@ -16,6 +17,7 @@ import type { z } from 'zod';
 import type { GameOutput, OnlineGame } from './game';
 import { GameRegistry, type GameRegistryOptions } from './games';
 import { GuestSessions } from './guests';
+import { Matchmaker } from './queue';
 
 interface SocketData {
   player: Player;
@@ -54,6 +56,8 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
   });
 
   const games = new GameRegistry(outputFor, options);
+  const queue = new Matchmaker();
+  const userRoom = (playerId: string) => `user:${playerId}`;
 
   // Гостевая сессия: по токену из `auth.token` или новая.
   io.use((socket, next) => {
@@ -68,6 +72,7 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
   io.on('connection', (socket: GameSocket) => {
     const { player, session } = socket.data;
     if (session) socket.emit('session', session);
+    void socket.join(userRoom(player.id));
 
     /** Подписать сокет на комнаты партии и отметить игрока онлайн. */
     const attach = (game: OnlineGame, side: Side) => {
@@ -111,7 +116,23 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
       withGame(gameId, (game) => game.answerDraw(player.id, accept)),
     );
 
+    on(socket, 'queue:join', emptySchema, () => {
+      const pair = queue.join(player, socket.id);
+      if (pair) {
+        // Партия начинается сразу; игроки входят в неё через `game:join` и тем самым подключаются.
+        const game = games.createMatched(...pair);
+        game.start();
+        for (const p of pair) io.to(userRoom(p.id)).emit('queue:matched', { gameId: game.id });
+      }
+      return { ok: true };
+    });
+    on(socket, 'queue:leave', emptySchema, () => {
+      queue.leave(player.id);
+      return { ok: true };
+    });
+
     socket.on('disconnect', () => {
+      queue.dropSocket(player.id, socket.id);
       for (const [gameId, side] of socket.data.games) games.get(gameId)?.disconnect(side);
       socket.data.games.clear();
     });
@@ -122,7 +143,7 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
     return game ? fn(game) : fail('not_found');
   }
 
-  return { games, guests };
+  return { games, guests, queue };
 }
 
 const fail = (error: ErrorCode) => ({ ok: false, error }) as const;

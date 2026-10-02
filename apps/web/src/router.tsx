@@ -28,7 +28,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { SignInScreen } from './screens/SignInScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
 import { useSettings } from './settings';
-import { createGame, parseTimeControl } from './net/online';
+import { createGame, parseTimeControl, useQueue } from './net/online';
 
 const PATHS: Record<ScreenId, string> = {
   home: '/',
@@ -150,6 +150,12 @@ function JoinCode() {
   return <JoinCodeScreen onSubmit={(code) => void navigate({ to: gamePath(code) })} />;
 }
 
+function Matchmaking() {
+  const navigate = useNavigate();
+  useQueue((gameId) => void navigate({ to: gamePath(gameId) }));
+  return <MatchmakingScreen />;
+}
+
 function OnlineGame() {
   const { gameId } = useParams({ strict: false }) as { gameId?: string };
   return <OnlineGameScreen key={gameId} gameId={(gameId ?? '').toUpperCase()} />;
@@ -227,7 +233,7 @@ const routes = [
   page('/friend/wait', FriendWait),
   page('/join', JoinCode),
   page('/g/$gameId', OnlineGame),
-  page('/play', () => <MatchmakingScreen />),
+  page('/play', Matchmaking),
   page('/game', Game),
   page('/sign-in', SignInScreen),
   page('/profile', () => (

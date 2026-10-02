@@ -1,6 +1,9 @@
 /* Online game with a friend: two browser contexts = two guests, the real game server in between. */
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
+// One server and one shared queue: run these one after another so queue tests don't pair across tests.
+test.describe.configure({ mode: 'default' });
+
 const pit = (page: Page, index: number) => page.locator(`.k-board .k-pit[data-index="${index}"]`);
 const kazan = async (page: Page, side: 'white' | 'black') =>
   Number(await page.locator(`.k-kazan[data-side="${side}"] .k-kazan__count-text`).textContent());
@@ -104,4 +107,37 @@ test('opponent leaves: banner with the countdown, cleared when they come back', 
   await back.goto(`/g/${code}`);
   await expect(back.locator('.k-board')).toBeVisible();
   await expect(alice.locator('.k-banner')).toHaveCount(0);
+});
+
+test('random opponent: two guests press «Play» and meet in a 5+3 game', async ({ browser }) => {
+  const alice = await guest(browser);
+  const bek = await guest(browser);
+  for (const page of [alice, bek]) {
+    await page.goto('/');
+    await page.locator('.k-button', { hasText: 'Играть' }).first().click();
+    await expect(page).toHaveURL(/\/play$/);
+  }
+  for (const page of [alice, bek]) {
+    await expect(page).toHaveURL(/\/g\/[A-Z2-9]{6}$/);
+    await expect(page.locator('.k-board')).toBeVisible();
+    await expect(page.locator('.k-topbar')).toContainText('Онлайн · 5+3');
+  }
+  expect(alice.url()).toBe(bek.url());
+  // One is White, the other Black: exactly one of them may move.
+  const active = async (page: Page) => page.locator('.k-player--me.k-player--active').count();
+  expect((await active(alice)) + (await active(bek))).toBe(1);
+});
+
+test('leaving the search leaves the queue', async ({ browser }) => {
+  const alice = await guest(browser);
+  await alice.goto('/play');
+  await alice.getByRole('button', { name: 'Отмена' }).click();
+  await expect(alice).toHaveURL(/\/$/);
+  // Two new guests are paired with each other, not with Alice.
+  const bek = await guest(browser);
+  const carol = await guest(browser);
+  await bek.goto('/play');
+  await carol.goto('/play');
+  for (const page of [bek, carol]) await expect(page).toHaveURL(/\/g\/[A-Z2-9]{6}$/);
+  expect(bek.url()).toBe(carol.url());
 });
