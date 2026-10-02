@@ -17,6 +17,7 @@
 | [docs/tech-stack.md](docs/tech-stack.md)                       | Выбор технологий и обоснование                              |
 | [docs/architecture.md](docs/architecture.md)                   | Архитектура, структура репозитория, протокол, модель данных |
 | [docs/roadmap.md](docs/roadmap.md)                             | Этапы разработки (MVP → релиз)                              |
+| [docs/deploy.md](docs/deploy.md)                               | Деплой на VPS: домен, DNS, Docker Compose, автодеплой       |
 | [docs/design/handoff.md](docs/design/handoff.md)               | Как handoff из Claude Design переносится в код              |
 | [design/handoff/README.md](design/handoff/README.md)           | Эталонный дизайн (направление 1a «Жаңгак»): экраны, токены  |
 | [design/DEVIATIONS.md](design/DEVIATIONS.md)                   | Отличия реализации от дизайна                               |
@@ -42,6 +43,7 @@ pnpm --filter @korgool/web dev          # клиент: http://localhost:5173
 pnpm --filter @korgool/server dev       # сервер партий: http://localhost:3000 (PORT, PUBLIC_URL);
                                         # клиент в dev проксирует к нему /socket.io
 pnpm --filter @korgool/web test:visual  # попиксельное сравнение с дизайном (Playwright)
+DOMAIN=localhost docker compose up -d --build  # весь сайт в Docker: https://localhost
 ```
 
 В dev-сборке клиента есть `/__design?screen=…` (экраны дизайна из фикстур) и `/__design/compare`

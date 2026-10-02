@@ -209,6 +209,8 @@ export const ERROR_CODES = [
   'stale_ply',
   'illegal_move',
   'no_draw_offer',
+  /** Ошибка на сервере (уже записана в лог и Sentry). */
+  'server_error',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 

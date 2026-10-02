@@ -1,0 +1,32 @@
+# Продакшн: `docker compose up -d --build` на сервере (docs/deploy.md).
+# Сервер партий хранит партии в памяти, поэтому он один: без реплик.
+services:
+  server:
+    build: { context: ., target: server }
+    restart: unless-stopped
+    environment:
+      PUBLIC_URL: https://${DOMAIN:?задайте DOMAIN в .env}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+    restart: unless-stopped
+    depends_on: [server]
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

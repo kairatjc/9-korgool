@@ -21,4 +21,11 @@ async function boot() {
   );
 }
 
+// Sentry is optional: built in only when VITE_SENTRY_DSN is set, and loaded after the first render.
+const sentryDsn = import.meta.env['VITE_SENTRY_DSN'] as string | undefined;
+if (sentryDsn)
+  void import('@sentry/browser').then((Sentry) =>
+    Sentry.init({ dsn: sentryDsn, environment: import.meta.env.MODE, tracesSampleRate: 0 }),
+  );
+
 void boot();

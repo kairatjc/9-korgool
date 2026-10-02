@@ -1,0 +1,49 @@
+# Деплой на VPS после зелёного CI в main (docs/deploy.md).
+# Выключен, пока в настройках репозитория не задана переменная DEPLOY_HOST.
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      vars.DEPLOY_HOST != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    env:
+      HOST: ${{ vars.DEPLOY_HOST }}
+      USER: ${{ vars.DEPLOY_USER || 'deploy' }}
+      DIR: ${{ vars.DEPLOY_DIR || '/opt/korgool' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Для workflow_run — ровно тот коммит, на котором прошёл CI.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+      - name: Upload sources
+        # .env и данные Caddy остаются на сервере.
+        run: rsync -az --delete --exclude .git --exclude .env --exclude node_modules ./ "$USER@$HOST:$DIR/"
+      - name: Build and restart
+        run: ssh "$USER@$HOST" "cd $DIR && docker compose up -d --build --remove-orphans && docker image prune -f"
+      - name: Health check
+        run: |
+          domain=$(ssh "$USER@$HOST" "grep '^DOMAIN=' $DIR/.env | cut -d= -f2")
+          for i in $(seq 1 30); do
+            curl -fsS "https://$domain/health" && exit 0
+            sleep 5
+          done
+          echo "https://$domain/health не отвечает" && exit 1
