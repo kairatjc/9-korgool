@@ -141,5 +141,14 @@
   "spec.states": "Pit states",
   "spec.balls": "Balls in a pit: 0–14, then a heap",
   "spec.kazan": "Balls in a kazan: up to 100, then a full kazan",
-  "spec.clock": "Clock"
+  "spec.clock": "Clock",
+  "online.notFound": "Game not found",
+  "online.full": "This game already has two players",
+  "online.error": "Can't reach the server",
+  "game.drawOfferTitle": "Your opponent offers a draw",
+  "game.drawAccept": "Accept the draw",
+  "game.drawDecline": "Keep playing",
+  "over.cancelled": "Game cancelled",
+  "over.reason.cancelled": "No first move within 30 seconds",
+  "over.reason.agreed": "Draw by agreement"
 }

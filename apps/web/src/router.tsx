@@ -6,6 +6,7 @@ import {
   createRouter,
   Outlet,
   useNavigate,
+  useParams,
   useSearch,
 } from '@tanstack/react-router';
 import { createContext, useContext, useMemo, useState } from 'react';
@@ -20,12 +21,14 @@ import { FriendCreateScreen, FriendWaitScreen, JoinCodeScreen } from './screens/
 import { GAME_MODES, GameScreen, type GameMode } from './screens/GameScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { MatchmakingScreen } from './screens/MatchmakingScreen';
+import { OnlineGameScreen } from './screens/OnlineGameScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { RulesScreen } from './screens/RulesScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { SignInScreen } from './screens/SignInScreen';
 import { TutorialScreen } from './screens/TutorialScreen';
 import { useSettings } from './settings';
+import { createGame, parseTimeControl } from './net/online';
 
 const PATHS: Record<ScreenId, string> = {
   home: '/',
@@ -118,6 +121,40 @@ function FriendWait() {
   );
 }
 
+const gamePath = (gameId: string): string => `/g/${gameId}`;
+
+function FriendCreate() {
+  const t = useT();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  return (
+    <FriendCreateScreen
+      busy={busy}
+      error={error}
+      onCreate={(time, side) => {
+        setBusy(true);
+        setError(undefined);
+        void createGame(parseTimeControl(time), side).then((res) => {
+          setBusy(false);
+          if (res.ok) void navigate({ to: gamePath(res.game.gameId) });
+          else setError(t('online.error'));
+        });
+      }}
+    />
+  );
+}
+
+function JoinCode() {
+  const navigate = useNavigate();
+  return <JoinCodeScreen onSubmit={(code) => void navigate({ to: gamePath(code) })} />;
+}
+
+function OnlineGame() {
+  const { gameId } = useParams({ strict: false }) as { gameId?: string };
+  return <OnlineGameScreen key={gameId} gameId={(gameId ?? '').toUpperCase()} />;
+}
+
 function Settings() {
   const s = useAppSettings();
   return (
@@ -186,9 +223,10 @@ function Game() {
 const routes = [
   page('/', Home),
   page('/bot', BotSetupScreen),
-  page('/friend', FriendCreateScreen),
+  page('/friend', FriendCreate),
   page('/friend/wait', FriendWait),
-  page('/join', () => <JoinCodeScreen />),
+  page('/join', JoinCode),
+  page('/g/$gameId', OnlineGame),
   page('/play', () => <MatchmakingScreen />),
   page('/game', Game),
   page('/sign-in', SignInScreen),

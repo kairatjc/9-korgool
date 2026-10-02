@@ -75,6 +75,9 @@ importers:
       '@korgool/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@korgool/protocol':
+        specifier: workspace:*
+        version: link:../../packages/protocol
       '@tanstack/react-router':
         specifier: ^1.170.41
         version: 1.170.41(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -93,6 +96,9 @@ importers:
       react-i18next:
         specifier: ^17.0.15
         version: 17.0.15(i18next@26.4.2(typescript@6.0.3))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
+      socket.io-client:
+        specifier: ^4.8.4
+        version: 4.8.4
     devDependencies:
       '@playwright/test':
         specifier: 1.56.1
