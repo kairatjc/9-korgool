@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Тогуз коргоол</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Rubik:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="k-app" id="app">
+
+<!-- ═════════ HOME ═════════ -->
+<section class="k-screen k-home" data-screen="home" data-component="HomeScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <label class="k-lang" data-component="LanguageSelect">
+      <i data-lucide="globe"></i>
+      <select class="k-lang__select" data-lang-select aria-label="Language">
+        <option value="ky" data-i18n="lang.ky"></option>
+        <option value="ru" data-i18n="lang.ru"></option>
+        <option value="en" data-i18n="lang.en"></option>
+      </select>
+      <i data-lucide="chevron-down"></i>
+    </label>
+    <div class="k-topbar__spacer"></div>
+    <button class="k-button k-button--ghost k-button--sm" data-go="sign-in" data-when="guest"><i data-lucide="log-in"></i><span data-i18n="home.signIn"></span></button>
+    <button class="k-icon-button" data-go="profile" data-when="signed-in" aria-label="Profile"><span class="k-avatar k-avatar--sm k-avatar--light">А</span></button>
+  </header>
+  <main class="k-home__body">
+    <div class="k-home__logo k-logo" data-component="Logo">
+      <svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg>
+      <h1 class="k-logo__name" data-i18n="common.appName"></h1>
+      <p class="k-logo__tagline" data-i18n="common.tagline"></p>
+    </div>
+    <div class="k-home__board" aria-hidden="true"><div class="k-board-host" data-board-host="home"></div></div>
+    <div class="k-home__actions">
+      <button class="k-button k-button--primary k-button--hero k-button--block" data-go="matchmaking">
+        <span class="k-button__label" data-i18n="home.play"></span>
+        <span class="k-button__sub" data-i18n="home.playSub"></span>
+      </button>
+      <nav class="k-menu" data-component="Menu">
+        <button class="k-menu__item" data-go="friend-create"><span class="k-menu__icon"><i data-lucide="users"></i></span><span class="k-menu__label" data-i18n="home.friend"></span><i data-lucide="chevron-right" class="k-menu__chevron"></i></button>
+        <button class="k-menu__item" data-go="bot-setup"><span class="k-menu__icon"><i data-lucide="bot"></i></span><span class="k-menu__label" data-i18n="home.bot"></span><i data-lucide="chevron-right" class="k-menu__chevron"></i></button>
+        <button class="k-menu__item" data-go="game" data-go-params="mode=local&amp;fixture=start"><span class="k-menu__icon"><i data-lucide="smartphone"></i></span><span class="k-menu__label" data-i18n="home.local"></span><i data-lucide="chevron-right" class="k-menu__chevron"></i></button>
+      </nav>
+      <div class="k-home__links">
+        <a class="k-link" href="?screen=rules" data-go="rules"><i data-lucide="book-open"></i><span data-i18n="home.rules"></span></a>
+        <a class="k-link" href="?screen=tutorial" data-go="tutorial"><i data-lucide="graduation-cap"></i><span data-i18n="home.tutorial"></span></a>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ BOT SETUP ═════════ -->
+<section class="k-screen" data-screen="bot-setup" data-component="BotSetupScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page">
+    <h1 class="k-page__title" data-i18n="bot.title"></h1>
+    <div class="k-field-group">
+      <div class="k-field-group__label" data-i18n="bot.level"></div>
+      <div class="k-choice-grid" data-choice-group>
+        <button class="k-choice" data-component="Choice"><span class="k-pips"><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip"></span><span class="k-pips__pip"></span><span class="k-pips__pip"></span></span><span class="k-choice__title" data-i18n="bot.level1"></span><span class="k-choice__sub" data-i18n="bot.level1Sub"></span></button>
+        <button class="k-choice k-choice--selected" data-component="Choice"><span class="k-pips"><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip"></span><span class="k-pips__pip"></span></span><span class="k-choice__title" data-i18n="bot.level2"></span><span class="k-choice__sub" data-i18n="bot.level2Sub"></span></button>
+        <button class="k-choice" data-component="Choice"><span class="k-pips"><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip"></span></span><span class="k-choice__title" data-i18n="bot.level3"></span><span class="k-choice__sub" data-i18n="bot.level3Sub"></span></button>
+        <button class="k-choice" data-component="Choice"><span class="k-pips"><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip k-pips__pip--on"></span><span class="k-pips__pip k-pips__pip--on"></span></span><span class="k-choice__title" data-i18n="bot.level4"></span><span class="k-choice__sub" data-i18n="bot.level4Sub"></span></button>
+      </div>
+    </div>
+    <div class="k-field-group">
+      <div class="k-field-group__label" data-i18n="common.color"></div>
+      <div class="k-segmented" data-component="Segmented" data-choice-group>
+        <button class="k-segmented__option k-segmented__option--selected"><span class="k-side-dot k-side-dot--white"></span><span data-i18n="common.white"></span></button>
+        <button class="k-segmented__option"><span class="k-side-dot k-side-dot--black"></span><span data-i18n="common.black"></span></button>
+        <button class="k-segmented__option"><span class="k-side-dot k-side-dot--random"></span><span data-i18n="common.random"></span></button>
+      </div>
+    </div>
+    <div class="k-field-group">
+      <div class="k-field-group__label" data-i18n="common.timeControl"></div>
+      <div class="k-chips" data-component="Chips" data-choice-group>
+        <button class="k-chip">3+2</button><button class="k-chip">5+3</button><button class="k-chip">10+5</button><button class="k-chip">15+10</button>
+        <button class="k-chip k-chip--selected" data-i18n="common.noClock"></button>
+      </div>
+    </div>
+    <div class="k-page__footer">
+      <button class="k-button k-button--primary k-button--lg k-button--block" data-go="game" data-go-params="mode=bot&amp;fixture=start"><span data-i18n="bot.start"></span></button>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ FRIEND CREATE ═════════ -->
+<section class="k-screen" data-screen="friend-create" data-component="FriendCreateScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page">
+    <h1 class="k-page__title" data-i18n="friend.title"></h1>
+    <div class="k-field-group">
+      <div class="k-field-group__label" data-i18n="common.timeControl"></div>
+      <div class="k-chips" data-component="Chips" data-choice-group>
+        <button class="k-chip">3+2</button><button class="k-chip">5+3</button><button class="k-chip k-chip--selected">10+5</button><button class="k-chip">15+10</button>
+        <button class="k-chip" data-i18n="common.noClock"></button>
+      </div>
+    </div>
+    <div class="k-field-group">
+      <div class="k-field-group__label" data-i18n="common.color"></div>
+      <div class="k-segmented" data-component="Segmented" data-choice-group>
+        <button class="k-segmented__option k-segmented__option--selected"><span class="k-side-dot k-side-dot--white"></span><span data-i18n="common.white"></span></button>
+        <button class="k-segmented__option"><span class="k-side-dot k-side-dot--black"></span><span data-i18n="common.black"></span></button>
+        <button class="k-segmented__option"><span class="k-side-dot k-side-dot--random"></span><span data-i18n="common.random"></span></button>
+      </div>
+    </div>
+    <div class="k-page__footer">
+      <button class="k-button k-button--primary k-button--lg k-button--block" data-go="friend-wait"><span data-i18n="friend.create"></span></button>
+      <button class="k-button k-button--ghost k-button--block" data-go="join-code"><i data-lucide="key-round"></i><span data-i18n="friend.haveCode"></span></button>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ FRIEND WAIT ═════════ -->
+<section class="k-screen" data-screen="friend-wait" data-component="FriendWaitScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="friend-create" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page">
+    <div class="k-page__stack">
+      <h1 class="k-page__title" data-i18n="friend.waitTitle"></h1>
+      <p class="k-page__lead" data-i18n="friend.waitLead"></p>
+    </div>
+    <div class="k-room-code" data-component="RoomCode">
+      <span class="k-room-code__label" data-i18n="friend.roomCode"></span>
+      <span class="k-room-code__value" data-slot="room-code"></span>
+      <div class="k-summary"><span class="k-badge k-badge--muted">10+5</span><span class="k-badge k-badge--muted"><span class="k-side-dot k-side-dot--white"></span><span data-i18n="common.white"></span></span></div>
+    </div>
+    <div class="k-page__stack">
+      <div class="k-field" data-component="ShareField">
+        <span class="k-field__value" data-slot="invite-link"></span>
+        <button class="k-button k-button--ink k-button--sm"><i data-lucide="copy"></i><span data-i18n="friend.copy"></span></button>
+      </div>
+      <div class="k-share">
+        <button class="k-button"><i data-lucide="message-circle"></i><span data-i18n="friend.whatsapp"></span></button>
+        <button class="k-button"><i data-lucide="send"></i><span data-i18n="friend.telegram"></span></button>
+      </div>
+    </div>
+    <div class="k-waiting"><span class="k-spinner"></span><span data-i18n="friend.waiting"></span></div>
+    <div class="k-page__footer">
+      <button class="k-button k-button--ghost k-button--block" data-go="home"><span data-i18n="common.cancel"></span></button>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ JOIN CODE ═════════ -->
+<section class="k-screen" data-screen="join-code" data-component="JoinCodeScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="friend-create" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page">
+    <div class="k-page__stack">
+      <h1 class="k-page__title" data-i18n="join.title"></h1>
+      <p class="k-page__lead" data-i18n="join.lead"></p>
+    </div>
+    <div class="k-code" data-component="CodeInput">
+      <span class="k-code__cell"></span><span class="k-code__cell"></span><span class="k-code__cell"></span><span class="k-code__cell"></span><span class="k-code__cell"></span><span class="k-code__cell"></span>
+      <input class="k-code__input" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code" data-code-input>
+    </div>
+    <div class="k-page__footer">
+      <button class="k-button k-button--primary k-button--lg k-button--block" data-join-submit disabled><span data-i18n="join.submit"></span></button>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ MATCHMAKING ═════════ -->
+<section class="k-screen" data-screen="matchmaking" data-component="MatchmakingScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page k-page--center">
+    <div class="k-search" data-component="SearchPulse">
+      <span class="k-search__ring"></span><span class="k-search__ring k-search__ring--2"></span><span class="k-search__ring k-search__ring--3"></span>
+      <span class="k-search__core"><svg aria-hidden="true"><use href="#k-ornament"></use></svg></span>
+    </div>
+    <div class="k-search__meta">
+      <div class="k-search__title" data-i18n="mm.searching"></div>
+      <div class="k-search__timer" data-slot="mm-timer">0:12</div>
+      <span class="k-badge k-badge--muted" data-i18n="mm.queue"></span>
+    </div>
+    <div class="k-card" data-slot="mm-offer" data-component="OfferCard" hidden>
+      <div class="k-card__title" data-i18n="mm.offerTitle"></div>
+      <p class="k-card__text" data-i18n="mm.offerText"></p>
+      <div class="k-card__actions">
+        <button class="k-button k-button--ink k-button--block" data-go="game" data-go-params="mode=bot&amp;fixture=start"><i data-lucide="bot"></i><span data-i18n="mm.offerAccept"></span></button>
+        <button class="k-button k-button--ghost k-button--block" data-action="mm-keep"><span data-i18n="mm.offerKeep"></span></button>
+      </div>
+    </div>
+    <div class="k-page__footer">
+      <button class="k-button k-button--block" data-go="home"><span data-i18n="common.cancel"></span></button>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ GAME ═════════ -->
+<section class="k-screen k-game" data-screen="game" data-component="GameScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__title" data-slot="game-title"></div>
+    <div class="k-topbar__end"><button class="k-icon-button" data-go="settings" aria-label="Settings"><i data-lucide="settings"></i></button></div>
+  </header>
+  <div class="k-game__body">
+    <div class="k-game__main">
+      <div class="k-banner" data-slot="offline-banner" data-component="Banner" hidden>
+        <i data-lucide="wifi-off"></i><span class="k-banner__text" data-i18n="game.opponentLeft"></span><span class="k-banner__timer">0:45</span>
+      </div>
+      <div class="k-player k-player--opponent" data-component="PlayerPlate" data-player="opponent">
+        <div class="k-avatar" data-slot="avatar"></div>
+        <div class="k-player__info">
+          <div class="k-player__line">
+            <span class="k-player__name" data-slot="name"></span>
+            <span class="k-badge k-badge--muted k-player__turn" data-i18n="game.opponentTurn"></span>
+            <span class="k-badge k-badge--danger k-player__offline"><i data-lucide="wifi-off"></i><span data-i18n="game.offline"></span></span>
+          </div>
+          <div class="k-player__side"><span class="k-side-dot k-side-dot--black"></span><span data-i18n="common.black"></span></div>
+        </div>
+        <div class="k-clock" data-component="Clock" data-slot="clock"></div>
+      </div>
+      <div class="k-game__board"><div class="k-board-host" data-board-host="game"></div></div>
+      <div class="k-player k-player--me" data-component="PlayerPlate" data-player="me">
+        <div class="k-avatar k-avatar--light" data-slot="avatar"></div>
+        <div class="k-player__info">
+          <div class="k-player__line">
+            <span class="k-player__name" data-slot="name"></span>
+            <span class="k-badge k-badge--accent k-player__turn" data-i18n="game.yourTurn"></span>
+          </div>
+          <div class="k-player__side"><span class="k-side-dot k-side-dot--white"></span><span data-i18n="common.white"></span></div>
+        </div>
+        <div class="k-clock" data-component="Clock" data-slot="clock"></div>
+      </div>
+    </div>
+    <aside class="k-game__side">
+      <section class="k-moves" data-component="MoveList">
+        <button class="k-moves__strip" data-action="history-open"><i data-lucide="list"></i><span class="k-moves__strip-text" data-slot="moves-strip"></span><i data-lucide="chevron-up"></i></button>
+        <div class="k-moves__header" data-i18n="game.moves"></div>
+        <div class="k-moves__list" data-slot="moves-list"></div>
+      </section>
+      <div class="k-game__actions" data-component="GameActions">
+        <button class="k-button k-game__action" data-action="undo" data-modes="bot"><i data-lucide="undo-2"></i><span class="k-game__action-long" data-i18n="game.undo"></span><span class="k-game__action-short" data-i18n="game.undoShort"></span></button>
+        <button class="k-button k-game__action" data-action="hint" data-modes="bot"><i data-lucide="lightbulb"></i><span class="k-game__action-long" data-i18n="game.hint"></span><span class="k-game__action-short" data-i18n="game.hint"></span></button>
+        <button class="k-button k-game__action" data-action="draw" data-modes="online friend"><i data-lucide="handshake"></i><span class="k-game__action-long" data-i18n="game.offerDraw"></span><span class="k-game__action-short" data-i18n="game.drawShort"></span></button>
+        <button class="k-button k-game__action" data-action="flip"><i data-lucide="arrow-up-down"></i><span class="k-game__action-long" data-i18n="game.flip"></span><span class="k-game__action-short" data-i18n="game.flipShort"></span></button>
+        <button class="k-button k-button--danger k-game__action" data-action="resign"><i data-lucide="flag"></i><span class="k-game__action-long" data-i18n="game.resign"></span><span class="k-game__action-short" data-i18n="game.resign"></span></button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="k-overlay" data-slot="reconnecting" data-component="ReconnectOverlay" hidden>
+    <span class="k-spinner k-spinner--lg"></span>
+    <div class="k-overlay__title" data-i18n="game.reconnecting"></div>
+    <div class="k-overlay__sub" data-i18n="game.reconnectingSub"></div>
+  </div>
+
+  <div class="k-scrim" data-slot="sheet-scrim" data-action="history-close" hidden></div>
+  <div class="k-sheet" data-slot="sheet" data-component="Sheet" hidden>
+    <div class="k-sheet__handle"></div>
+    <div class="k-sheet__header"><span class="k-sheet__title" data-i18n="game.moves"></span><button class="k-icon-button" data-action="history-close" aria-label="Close"><i data-lucide="x"></i></button></div>
+    <div class="k-sheet__body" data-slot="moves-sheet"></div>
+  </div>
+
+  <div class="k-modal" data-slot="resign-modal" data-component="Modal" hidden>
+    <div class="k-modal__card" role="dialog" aria-modal="true">
+      <div class="k-modal__icon"><i data-lucide="flag"></i></div>
+      <h2 class="k-modal__title" data-i18n="game.resignTitle"></h2>
+      <p class="k-modal__text" data-i18n="game.resignText"></p>
+      <div class="k-modal__actions">
+        <button class="k-button k-button--primary k-button--block" data-action="resign-confirm"><span data-i18n="game.resignConfirm"></span></button>
+        <button class="k-button k-button--block" data-action="modal-close"><span data-i18n="common.cancel"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="k-modal k-modal--result" data-slot="over-modal" data-component="GameOverModal" hidden>
+    <div class="k-modal__card" role="dialog" aria-modal="true">
+      <svg class="k-modal__mark" aria-hidden="true"><use href="#k-ornament"></use></svg>
+      <h2 class="k-modal__title" data-slot="over-title"></h2>
+      <p class="k-modal__text" data-slot="over-reason"></p>
+      <div class="k-score" data-component="Score">
+        <div class="k-score__player"><span class="k-avatar k-avatar--light" data-slot="over-me-avatar"></span><span class="k-score__name" data-slot="over-me-name"></span></div>
+        <div class="k-score__value"><span data-slot="over-me-score"></span><span class="k-score__sep">:</span><span data-slot="over-opp-score"></span></div>
+        <div class="k-score__player"><span class="k-avatar" data-slot="over-opp-avatar"></span><span class="k-score__name" data-slot="over-opp-name"></span></div>
+      </div>
+      <div class="k-modal__actions">
+        <button class="k-button k-button--primary k-button--block" data-action="rematch"><i data-lucide="rotate-ccw"></i><span data-i18n="over.rematch"></span></button>
+        <button class="k-button k-button--block" data-go="home" data-go-params=""><span data-i18n="over.newGame"></span></button>
+        <button class="k-button k-button--ghost k-button--block" data-go="home"><span data-i18n="over.home"></span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════ SIGN IN ═════════ -->
+<section class="k-screen" data-screen="sign-in" data-component="SignInScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page k-page--center">
+    <div class="k-logo" data-component="Logo">
+      <svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg>
+      <h1 class="k-logo__name" data-i18n="common.appName"></h1>
+    </div>
+    <p class="k-page__lead" data-i18n="signin.lead"></p>
+    <div class="k-page__stack">
+      <button class="k-button k-button--ink k-button--lg k-button--block" data-go="home" data-go-params="auth=1"><i data-lucide="log-in"></i><span data-i18n="signin.google"></span></button>
+      <button class="k-button k-button--ghost k-button--block" data-go="home"><span data-i18n="signin.guest"></span></button>
+    </div>
+    <p class="k-page__note" data-i18n="signin.note"></p>
+  </main>
+</section>
+
+<!-- ═════════ PROFILE ═════════ -->
+<section class="k-screen" data-screen="profile" data-component="ProfileScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+    <div class="k-topbar__end"><button class="k-icon-button" data-go="settings" aria-label="Settings"><i data-lucide="settings"></i></button></div>
+  </header>
+  <main class="k-page k-page--wide k-profile">
+    <div class="k-profile__head">
+      <span class="k-avatar k-avatar--xl k-avatar--light" data-slot="profile-avatar"></span>
+      <div class="k-profile__who">
+        <h1 class="k-profile__name" data-slot="profile-name"></h1>
+        <div class="k-profile__place"><i data-lucide="map-pin"></i><span data-slot="profile-place"></span></div>
+      </div>
+      <button class="k-icon-button" aria-label="Edit"><i data-lucide="pencil"></i></button>
+    </div>
+    <div class="k-profile__block k-profile__block--stats">
+      <h2 class="k-section-title" data-i18n="profile.stats"></h2>
+      <div class="k-stats" data-component="Stats">
+        <div class="k-stats__item"><span class="k-stats__value" data-slot="stat-wins"></span><span class="k-stats__label" data-i18n="profile.wins"></span></div>
+        <div class="k-stats__item"><span class="k-stats__value" data-slot="stat-losses"></span><span class="k-stats__label" data-i18n="profile.losses"></span></div>
+        <div class="k-stats__item"><span class="k-stats__value" data-slot="stat-draws"></span><span class="k-stats__label" data-i18n="profile.draws"></span></div>
+        <div class="k-stats__item"><span class="k-stats__value" data-slot="stat-tuzdyks"></span><span class="k-stats__label" data-i18n="profile.tuzdyks"></span></div>
+      </div>
+    </div>
+    <div class="k-profile__block k-profile__block--history">
+      <h2 class="k-section-title" data-i18n="profile.history"></h2>
+      <ul class="k-history" data-component="HistoryList" data-slot="history"></ul>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ RULES ═════════ -->
+<section class="k-screen" data-screen="rules" data-component="RulesScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page k-page--article">
+    <h1 class="k-page__title" data-i18n="rules.title"></h1>
+    <article class="k-article" data-component="Article">
+      <section class="k-article__section">
+        <h2 class="k-article__heading" data-i18n="rules.boardTitle"></h2>
+        <p class="k-article__text" data-i18n="rules.boardText"></p>
+      </section>
+      <section class="k-article__section">
+        <h2 class="k-article__heading" data-i18n="rules.sowTitle"></h2>
+        <p class="k-article__text" data-i18n="rules.sowText"></p>
+        <figure class="k-figure" data-component="RuleFigure"><div data-diagram="sow"></div><figcaption class="k-figure__caption" data-i18n="rules.sowCaption"></figcaption></figure>
+      </section>
+      <section class="k-article__section">
+        <h2 class="k-article__heading" data-i18n="rules.captureTitle"></h2>
+        <p class="k-article__text" data-i18n="rules.captureText"></p>
+        <figure class="k-figure" data-component="RuleFigure"><div data-diagram="capture"></div><figcaption class="k-figure__caption" data-i18n="rules.captureCaption"></figcaption></figure>
+      </section>
+      <section class="k-article__section">
+        <h2 class="k-article__heading" data-i18n="rules.tuzdykTitle"></h2>
+        <p class="k-article__text" data-i18n="rules.tuzdykText"></p>
+        <figure class="k-figure" data-component="RuleFigure"><div data-diagram="tuzdyk"></div><figcaption class="k-figure__caption" data-i18n="rules.tuzdykCaption"></figcaption></figure>
+      </section>
+      <section class="k-article__section">
+        <h2 class="k-article__heading" data-i18n="rules.winTitle"></h2>
+        <p class="k-article__text" data-i18n="rules.winText"></p>
+      </section>
+    </article>
+  </main>
+</section>
+
+<!-- ═════════ TUTORIAL ═════════ -->
+<section class="k-screen k-tutorial" data-screen="tutorial" data-component="TutorialScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__title" data-i18n="tutorial.title"></div>
+    <div class="k-topbar__end"><button class="k-button k-button--ghost k-button--sm" data-go="home"><span data-i18n="tutorial.skip"></span></button></div>
+  </header>
+  <div class="k-tutorial__body">
+    <aside class="k-coach" data-component="CoachMark">
+      <span class="k-coach__step" data-i18n="tutorial.step" data-i18n-vars='{"n":2,"total":6}'></span>
+      <div class="k-progress" data-component="Progress">
+        <span class="k-progress__seg k-progress__seg--done"></span><span class="k-progress__seg k-progress__seg--current"></span><span class="k-progress__seg"></span><span class="k-progress__seg"></span><span class="k-progress__seg"></span><span class="k-progress__seg"></span>
+      </div>
+      <div class="k-coach__title" data-i18n="tutorial.tapPit"></div>
+      <p class="k-coach__text" data-i18n="tutorial.tapPitSub"></p>
+      <div class="k-coach__actions"><button class="k-button k-button--ghost-inverse k-button--sm"><i data-lucide="arrow-left"></i><span data-i18n="common.back"></span></button></div>
+    </aside>
+    <div class="k-tutorial__board"><div class="k-board-host" data-board-host="tutorial"></div></div>
+  </div>
+</section>
+
+<!-- ═════════ SETTINGS ═════════ -->
+<section class="k-screen" data-screen="settings" data-component="SettingsScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <a class="k-topbar__logo k-logo k-logo--inline" href="?screen=home" data-go="home"><svg class="k-logo__mark" aria-hidden="true"><use href="#k-ornament"></use></svg><span class="k-logo__name" data-i18n="common.appName"></span></a>
+    <div class="k-topbar__spacer"></div>
+  </header>
+  <main class="k-page">
+    <h1 class="k-page__title" data-i18n="settings.title"></h1>
+    <div class="k-list" data-component="SettingsList">
+      <div class="k-list__item k-list__item--stack">
+        <span class="k-list__title" data-i18n="lang.label"></span>
+        <div class="k-segmented" data-component="Segmented" data-setting="lang">
+          <button class="k-segmented__option" data-value="ky"><span data-i18n="lang.ky"></span></button>
+          <button class="k-segmented__option" data-value="ru"><span data-i18n="lang.ru"></span></button>
+          <button class="k-segmented__option" data-value="en"><span data-i18n="lang.en"></span></button>
+        </div>
+      </div>
+      <div class="k-list__item">
+        <div class="k-list__text"><span class="k-list__title" data-i18n="settings.sound"></span></div>
+        <button class="k-toggle k-toggle--on" data-component="Toggle" role="switch" aria-checked="true"><span class="k-toggle__knob"></span></button>
+      </div>
+      <div class="k-list__item">
+        <div class="k-list__text"><span class="k-list__title" data-i18n="settings.vibration"></span><span class="k-list__sub" data-i18n="settings.vibrationSub"></span></div>
+        <button class="k-toggle k-toggle--on" data-component="Toggle" role="switch" aria-checked="true"><span class="k-toggle__knob"></span></button>
+      </div>
+      <div class="k-list__item k-list__item--stack">
+        <span class="k-list__title" data-i18n="settings.speed"></span>
+        <div class="k-segmented" data-component="Segmented" data-setting="speed">
+          <button class="k-segmented__option" data-value="slow"><span data-i18n="settings.speedSlow"></span></button>
+          <button class="k-segmented__option" data-value="normal"><span data-i18n="settings.speedNormal"></span></button>
+          <button class="k-segmented__option" data-value="fast"><span data-i18n="settings.speedFast"></span></button>
+          <button class="k-segmented__option" data-value="off"><span data-i18n="settings.speedOff"></span></button>
+        </div>
+      </div>
+      <div class="k-list__item">
+        <div class="k-list__text"><span class="k-list__title" data-i18n="settings.flip"></span><span class="k-list__sub" data-i18n="settings.flipSub"></span></div>
+        <button class="k-toggle" data-component="Toggle" role="switch" aria-checked="false"><span class="k-toggle__knob"></span></button>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- ═════════ SPEC (board states sheet) ═════════ -->
+<section class="k-screen" data-screen="spec" data-component="SpecScreen" hidden>
+  <header class="k-topbar" data-component="TopBar">
+    <button class="k-icon-button" data-go="home" aria-label="Back"><i data-lucide="arrow-left"></i></button>
+    <div class="k-topbar__title" data-i18n="spec.title"></div>
+    <div class="k-topbar__end"></div>
+  </header>
+  <main class="k-page k-page--wide k-spec">
+    <section class="k-profile__block"><h2 class="k-section-title" data-i18n="spec.states"></h2><div class="k-spec__grid" data-slot="spec-states"></div></section>
+    <section class="k-profile__block"><h2 class="k-section-title" data-i18n="spec.balls"></h2><div class="k-spec__grid" data-slot="spec-balls"></div></section>
+    <section class="k-profile__block"><h2 class="k-section-title" data-i18n="spec.kazan"></h2><div class="k-spec__grid k-spec__grid--wide" data-slot="spec-kazan"></div></section>
+    <section class="k-profile__block"><h2 class="k-section-title" data-i18n="spec.clock"></h2>
+      <div class="k-spec__row"><span class="k-clock">4:12</span><span class="k-clock k-clock--running">3:47</span><span class="k-clock k-clock--running k-clock--low">0:14</span><span class="k-clock k-clock--flag">0:00</span></div>
+    </section>
+  </main>
+</section>
+
+</div>
+
+<div class="k-devbar" data-slot="devbar" data-component="DevBar" hidden>
+  <button class="k-button k-button--primary k-button--sm" data-action="play-move"><i data-lucide="play"></i><span data-i18n="game.playMove"></span></button>
+  <select class="k-devbar__select" data-slot="dev-speed" aria-label="Speed">
+    <option value="slow" data-i18n="settings.speedSlow"></option>
+    <option value="normal" selected data-i18n="settings.speedNormal"></option>
+    <option value="fast" data-i18n="settings.speedFast"></option>
+    <option value="off" data-i18n="settings.speedOff"></option>
+  </select>
+</div>
+
+<template id="tpl-move-row"><div class="k-moves__row"><span class="k-moves__num"></span><span class="k-moves__move"></span><span class="k-moves__move"></span></div></template>
+<template id="tpl-history-item"><li class="k-history__item"><span class="k-avatar"></span><div class="k-history__main"><span class="k-history__name"></span><span class="k-history__date"></span></div><div class="k-history__end"><span class="k-badge"></span><span class="k-history__score"></span></div></li></template>
+<template id="tpl-spec-cell"><div class="k-spec__cell"><div class="k-spec__art"></div><span class="k-spec__label"></span></div></template>
+
+<script src="copy.js"></script>
+<script src="board.js"></script>
+<script src="motion.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
