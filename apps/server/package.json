@@ -1,0 +1,29 @@
+{
+  "name": "@korgool/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Игровой сервер: Fastify + Socket.IO, партии онлайн, серверные часы.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/main.js --packages=external --alias:@korgool/engine=../../packages/engine/src/index.ts --alias:@korgool/protocol=../../packages/protocol/src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@korgool/engine": "workspace:*",
+    "@korgool/protocol": "workspace:*",
+    "fastify": "^5.12.5",
+    "socket.io": "^4.8.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "esbuild": "^0.28.2",
+    "socket.io-client": "^4.8.4",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

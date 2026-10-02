@@ -70,20 +70,35 @@ function parse(str: string): GameState;
 
 ## 4. Реальное время: протокол
 
-Все сообщения валидируются Zod-схемами из `packages/protocol`.
+Все сообщения валидируются Zod-схемами из `packages/protocol` (`@korgool/protocol`).
+Запросы клиента получают ответ через подтверждение Socket.IO (ack): `{ ok: true, … }`
+или `{ ok: false, error }`, где `error` — код ошибки (`not_your_turn`, `stale_ply`, `game_full`, …).
 
 | Направление | Событие | Данные |
 |---|---|---|
-| C → S | `queue:join` / `queue:leave` | — (контроль времени фиксирован: 5+3) |
-| C → S | `game:create` | `{ timeControl, color }` → `{ gameId, inviteUrl }` |
-| C → S | `game:join` | `{ gameId }` |
+| C → S | `queue:join` / `queue:leave` | — (контроль времени фиксирован: 5+3) *(следующий срез)* |
+| C → S | `game:create` | `{ timeControl, color }` → `{ game, inviteUrl }` |
+| C → S | `game:join` | `{ gameId }` → `{ game }` — занять свободное место или вернуться в свою партию (реконнект) |
 | C → S | `game:move` | `{ gameId, pit, ply }` (`ply` — номер полухода, защита от дублей) |
-| C → S | `game:resign` / `game:draw-offer` / `game:draw-answer` | |
-| S → C | `game:start` | `{ gameId, players, state, clocks }` |
-| S → C | `game:moved` | `{ pit, events, state, clocks, ply }` |
-| S → C | `game:over` | `{ result, reason }` |
-| S → C | `game:sync` | полное состояние (после реконнекта) |
-| S → C | `opponent:status` | `{ online: boolean }` |
+| C → S | `game:resign` / `game:draw-offer` / `game:draw-answer` | `{ gameId }` / `{ gameId }` / `{ gameId, accept }` |
+| S → C | `session` | `{ token, player }` — новая гостевая сессия |
+| S → C | `game:start` | полное состояние партии (`GameSnapshot`) |
+| S → C | `game:moved` | `{ gameId, pit, ply, side, events, state, clocks }` |
+| S → C | `game:over` | `{ gameId, result, reason, clocks }` |
+| S → C | `game:draw-offered` / `game:draw-declined` | `{ gameId, by }` / `{ gameId }` |
+| S → C | `opponent:status` | `{ gameId, online }` |
+
+`GameSnapshot` — полное состояние: игроки, `you` (за кого играет получатель), позиция, ходы,
+часы, предложение ничьей, кто онлайн, результат. Его возвращают `game:create` и `game:join`,
+поэтому отдельного события `game:sync` нет: после реконнекта клиент снова шлёт `game:join`.
+
+**Гостевая сессия.** При подключении клиент передаёт `auth: { token }`. Если токена нет или он
+неизвестен, сервер создаёт гостя со случайным ником и присылает `session` — клиент сохраняет токен
+и переподключается с ним. Пока сессии хранятся в памяти сервера; со срезом «Хранение» их заменят
+сессии Better Auth (cookie `HttpOnly`).
+
+**Код партии** — 6 символов из `A–Z` и `2–9` без похожих `0/O`, `1/I`; он же код комнаты
+и часть ссылки `/g/AB23CD`.
 
 **Обработка хода на сервере:** получить партию из Redis → проверить, что ход игрока и `ply`
 совпадает → `engine.applyMove` → пересчитать часы по серверному времени → сохранить
@@ -91,6 +106,12 @@ function parse(str: string): GameState;
 
 **Часы** считаются только на сервере (время приёма хода). Клиент показывает локальный
 отсчёт и корректируется по каждому `game:moved`. Флаг времени проверяет серверный таймер.
+Часы запускаются после первого хода белых; до него действует 30-секундный таймер отмены партии
+([rules.md §8](rules.md#8-контроль-времени-платформенные-правила)). Таймеры (флаг, отмена,
+отключение на 60 с) живут в процессе сервера; `OnlineGame` в `apps/server/src/game.ts`.
+
+**Сейчас (этап 2, срез 1)** активные партии и гостевые сессии хранятся в памяти одного процесса;
+Redis и PostgreSQL подключаются отдельным срезом.
 
 ## 5. Модель данных (PostgreSQL)
 

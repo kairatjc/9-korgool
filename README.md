@@ -39,13 +39,16 @@ pnpm lint        # ESLint
 pnpm format      # Prettier
 pnpm design:serve  # прототип дизайна: http://127.0.0.1:4500/handoff/index.html
 pnpm --filter @korgool/web dev          # клиент: http://localhost:5173
+pnpm --filter @korgool/server dev       # сервер партий: http://localhost:3000 (PORT, PUBLIC_URL)
 pnpm --filter @korgool/web test:visual  # попиксельное сравнение с дизайном (Playwright)
 ```
 
 В dev-сборке клиента есть `/__design?screen=…` (экраны дизайна из фикстур) и `/__design/compare`
 (эталон и реализация рядом, наложение и разница).
 
-| Пакет                                | Что внутри                                                                                    |
-| ------------------------------------ | --------------------------------------------------------------------------------------------- |
-| [`packages/engine`](packages/engine) | `@korgool/engine` — правила игры: состояние, ходы, захват, туздук, конец партии, нотация      |
-| [`apps/web`](apps/web)               | Веб-клиент: React + Vite, экраны из [дизайна](design/handoff/README.md), локальная игра и бот |
+| Пакет                                    | Что внутри                                                                                    |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [`packages/engine`](packages/engine)     | `@korgool/engine` — правила игры: состояние, ходы, захват, туздук, конец партии, нотация      |
+| [`packages/protocol`](packages/protocol) | `@korgool/protocol` — Zod-схемы событий Socket.IO, общие типы клиента и сервера               |
+| [`apps/server`](apps/server)             | Сервер партий: Fastify + Socket.IO, гостевые сессии, ходы и часы на сервере (rules.md §8)     |
+| [`apps/web`](apps/web)                   | Веб-клиент: React + Vite, экраны из [дизайна](design/handoff/README.md), локальная игра и бот |
