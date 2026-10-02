@@ -39,7 +39,8 @@ pnpm lint        # ESLint
 pnpm format      # Prettier
 pnpm design:serve  # прототип дизайна: http://127.0.0.1:4500/handoff/index.html
 pnpm --filter @korgool/web dev          # клиент: http://localhost:5173
-pnpm --filter @korgool/server dev       # сервер партий: http://localhost:3000 (PORT, PUBLIC_URL)
+pnpm --filter @korgool/server dev       # сервер партий: http://localhost:3000 (PORT, PUBLIC_URL);
+                                        # клиент в dev проксирует к нему /socket.io
 pnpm --filter @korgool/web test:visual  # попиксельное сравнение с дизайном (Playwright)
 ```
 

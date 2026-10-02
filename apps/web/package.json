@@ -13,12 +13,14 @@
   },
   "dependencies": {
     "@korgool/engine": "workspace:*",
+    "@korgool/protocol": "workspace:*",
     "@tanstack/react-router": "^1.170.41",
     "i18next": "^26.4.2",
     "lucide-react": "0.469.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-i18next": "^17.0.15"
+    "react-i18next": "^17.0.15",
+    "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

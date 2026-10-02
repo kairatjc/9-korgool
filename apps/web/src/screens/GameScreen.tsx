@@ -45,13 +45,34 @@ export type GameUiState =
   | 'history-open';
 
 export type Outcome = 'win' | 'loss' | 'draw';
-export type OverReason = '82' | 'noMoves' | 'time' | 'resign' | 'disconnect';
+export type OverReason =
+  '82' | 'noMoves' | 'time' | 'resign' | 'disconnect' | 'agreed' | 'cancelled';
 
 export interface GameOver {
   outcome: Outcome;
   reason: OverReason;
   my: number;
   their: number;
+}
+
+/** Online game: moves come from the server, the player's own moves are sent to it. */
+export interface OnlineProps {
+  /** All moves of the game known to the server (pits 1..9). */
+  moves: readonly Pit[];
+  /** How many of them are already in `initial`. */
+  startPly: number;
+  /** Send the player's move; it is also played on the board right away. */
+  send: (pit: Pit, ply: number) => void;
+  /** The game ended on the server (time, resignation, disconnect, agreement, cancellation). */
+  over: GameOver | null;
+  /** The opponent is offline: countdown until they lose. */
+  offline: { timer: string } | null;
+  reconnecting: boolean;
+  lowTime: boolean;
+  /** The opponent offers a draw. */
+  drawOffered: boolean;
+  onOfferDraw: () => void;
+  onAnswerDraw: (accept: boolean) => void;
 }
 
 export interface GameScreenProps {
@@ -82,6 +103,7 @@ export interface GameScreenProps {
   onRematch: () => void;
   /** Prototype-only dev bar: replays this event list from the start position. */
   devbar?: readonly MoveEvent[] | undefined;
+  online?: OnlineProps | undefined;
 }
 
 const BOT_DELAY = 400;
@@ -283,6 +305,8 @@ export function GameScreen(p: GameScreenProps) {
   const [devSpeed, setDevSpeed] = useState<Speed>(env.speed);
   const [moved, setMoved] = useState(false);
   const history = useRef<Snapshot[]>([]);
+  // Online: number of moves played on this board (the next move's ply).
+  const ply = useRef(p.online?.startPly ?? 0);
   // The position an async hint was asked for may be gone by the time it arrives.
   const stRef = useRef(st);
   stRef.current = st;
@@ -341,6 +365,7 @@ export function GameScreen(p: GameScreenProps) {
   async function move(pit: Pit) {
     if (busy || isOver || st.status !== 'playing') return;
     const mv = applyMove(st, pit);
+    ply.current += 1;
     if (mv.record.side === player) history.current.push({ st, hl, moves });
     setMoved(true);
     const nextHl = await run(mv.events, st);
@@ -369,9 +394,27 @@ export function GameScreen(p: GameScreenProps) {
     };
   }, [st, busy, isOver]);
 
+  // Online: play the server's moves that are not on the board yet (the opponent's, or ours from another tab).
+  const { online } = p;
+  useEffect(() => {
+    if (!online || busy || isOver || st.status !== 'playing') return;
+    const pit = online.moves[ply.current];
+    if (pit !== undefined) void move(pit);
+  }, [online?.moves, busy, st]);
+
+  // Online: the server ended the game; wait for the last move's animation.
+  useEffect(() => {
+    if (online?.over && !busy) setOver((o) => o ?? online.over);
+  }, [online?.over, busy]);
+
   function onPit(i: number) {
     if (!p.hotSeat && st.turn !== me) return;
-    void move((i % 9) + 1);
+    const pit = (i % 9) + 1;
+    if (online) {
+      if (busy || isOver) return;
+      online.send(pit, ply.current);
+    }
+    void move(pit);
   }
 
   function undo() {
@@ -461,6 +504,16 @@ export function GameScreen(p: GameScreenProps) {
   const clockCls = (running: boolean, low = false) =>
     ['k-clock', running && 'k-clock--running', low && 'k-clock--low'].filter(Boolean).join(' ');
   const modeOn = (...modes: GameMode[]) => modes.includes(p.mode);
+  const oppOffline = ui === 'opponent-offline' || !!online?.offline;
+  const lowTime = ui === 'low-time' || !!online?.lowTime;
+  // 81 : 81 is shown for a draw on the board, not for an agreed or cancelled game.
+  const evenScore =
+    over?.outcome === 'draw' && over.reason !== 'agreed' && over.reason !== 'cancelled';
+  const overText = !over
+    ? ''
+    : over.reason === 'agreed' || over.reason === 'cancelled'
+      ? t(`over.reason.${over.reason}`)
+      : t(over.outcome === 'draw' ? 'over.reason.draw' : `over.reason.${over.reason}`);
 
   return (
     <section className="k-screen k-game" data-screen="game" data-component="GameScreen">
@@ -474,11 +527,11 @@ export function GameScreen(p: GameScreenProps) {
       />
       <div className="k-game__body">
         <div className="k-game__main">
-          {ui === 'opponent-offline' && (
+          {oppOffline && (
             <div className="k-banner" data-component="Banner">
               <WifiOff />
               <span className="k-banner__text">{t('game.opponentLeft')}</span>
-              <span className="k-banner__timer">0:45</span>
+              <span className="k-banner__timer">{online?.offline?.timer ?? '0:45'}</span>
             </div>
           )}
           <PlayerPlate
@@ -486,10 +539,10 @@ export function GameScreen(p: GameScreenProps) {
             person={plateOf(opp)}
             side={opp}
             active={oppTurn}
-            offline={ui === 'opponent-offline'}
+            offline={oppOffline}
             noClock={noClock}
             clock={clockOpp}
-            clockClass={clockCls(oppTurn && ui !== 'opponent-offline')}
+            clockClass={clockCls(oppTurn && !oppOffline)}
             t={t}
           />
           <div className="k-game__board">
@@ -513,7 +566,7 @@ export function GameScreen(p: GameScreenProps) {
             offline={false}
             noClock={noClock}
             clock={clockMe}
-            clockClass={clockCls(mine, ui === 'low-time')}
+            clockClass={clockCls(mine, lowTime)}
             t={t}
           />
         </div>
@@ -551,7 +604,7 @@ export function GameScreen(p: GameScreenProps) {
                 icon={<Handshake />}
                 long={t('game.offerDraw')}
                 short={t('game.drawShort')}
-                onClick={() => undefined}
+                onClick={() => !isOver && online?.onOfferDraw()}
               />
             )}
             <Action
@@ -571,7 +624,7 @@ export function GameScreen(p: GameScreenProps) {
         </aside>
       </div>
 
-      {ui === 'reconnecting' && (
+      {(ui === 'reconnecting' || online?.reconnecting) && (
         <div className="k-overlay" data-component="ReconnectOverlay">
           <span className="k-spinner k-spinner--lg"></span>
           <div className="k-overlay__title">{t('game.reconnecting')}</div>
@@ -620,6 +673,31 @@ export function GameScreen(p: GameScreenProps) {
         </div>
       )}
 
+      {online?.drawOffered && !isOver && !resign && (
+        <div className="k-modal" data-component="Modal">
+          <div className="k-modal__card" role="dialog" aria-modal="true">
+            <div className="k-modal__icon">
+              <Handshake />
+            </div>
+            <h2 className="k-modal__title">{t('game.drawOfferTitle')}</h2>
+            <div className="k-modal__actions">
+              <button
+                className="k-button k-button--primary k-button--block"
+                onClick={() => online.onAnswerDraw(true)}
+              >
+                <span>{t('game.drawAccept')}</span>
+              </button>
+              <button
+                className="k-button k-button--block"
+                onClick={() => online.onAnswerDraw(false)}
+              >
+                <span>{t('game.drawDecline')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {over && (
         <div
           className={`k-modal k-modal--result k-modal--${over.outcome}`}
@@ -627,10 +705,10 @@ export function GameScreen(p: GameScreenProps) {
         >
           <div className="k-modal__card" role="dialog" aria-modal="true">
             <Ornament className="k-modal__mark" />
-            <h2 className="k-modal__title">{t(`over.${over.outcome}`)}</h2>
-            <p className="k-modal__text">
-              {t(over.outcome === 'draw' ? 'over.reason.draw' : `over.reason.${over.reason}`)}
-            </p>
+            <h2 className="k-modal__title">
+              {t(over.reason === 'cancelled' ? 'over.cancelled' : `over.${over.outcome}`)}
+            </h2>
+            <p className="k-modal__text">{overText}</p>
             <div className="k-score" data-component="Score">
               <div className="k-score__player">
                 <span className="k-avatar k-avatar--light">
@@ -639,9 +717,9 @@ export function GameScreen(p: GameScreenProps) {
                 <span className="k-score__name">{p.players.me.name}</span>
               </div>
               <div className="k-score__value">
-                <span>{over.outcome === 'draw' ? 81 : over.my}</span>
+                <span>{evenScore ? 81 : over.my}</span>
                 <span className="k-score__sep">:</span>
-                <span>{over.outcome === 'draw' ? 81 : over.their}</span>
+                <span>{evenScore ? 81 : over.their}</span>
               </div>
               <div className="k-score__player">
                 <span className="k-avatar">

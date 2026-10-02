@@ -4,7 +4,16 @@ import { SideDot, TopBar, useGo, type SideKind } from '../components/ui';
 import { useT } from '../i18n';
 import { FieldGroup, SideSegmented, TimeChips, type TimeControl } from './setup';
 
-export function FriendCreateScreen() {
+export function FriendCreateScreen({
+  onCreate,
+  busy = false,
+  error,
+}: {
+  /** Create the game on the server; without it the button only opens the waiting screen. */
+  onCreate?: (time: TimeControl, side: SideKind) => void;
+  busy?: boolean;
+  error?: string | undefined;
+} = {}) {
   const t = useT();
   const go = useGo();
   const [time, setTime] = useState<TimeControl>('10+5');
@@ -23,10 +32,12 @@ export function FriendCreateScreen() {
         <div className="k-page__footer">
           <button
             className="k-button k-button--primary k-button--lg k-button--block"
-            onClick={go('friend-wait', { time, side })}
+            disabled={busy}
+            onClick={onCreate ? () => onCreate(time, side) : go('friend-wait', { time, side })}
           >
             <span>{t('friend.create')}</span>
           </button>
+          {error && <p className="k-page__lead">{error}</p>}
           <button className="k-button k-button--ghost k-button--block" onClick={go('join-code')}>
             <KeyRound />
             <span>{t('friend.haveCode')}</span>
@@ -40,18 +51,22 @@ export function FriendCreateScreen() {
 export function FriendWaitScreen({
   roomCode,
   inviteLink,
+  inviteUrl = 'https://' + inviteLink,
   time = '10+5',
   side = 'white',
 }: {
   roomCode: string;
+  /** The link as shown, without the protocol. */
   inviteLink: string;
+  /** The full link for copying and sharing. */
+  inviteUrl?: string;
   time?: string;
   side?: SideKind;
 }) {
   const t = useT();
   const go = useGo();
   const share = (base: string) => () =>
-    window.open(base + encodeURIComponent('https://' + inviteLink), '_blank', 'noopener');
+    window.open(base + encodeURIComponent(inviteUrl), '_blank', 'noopener');
   return (
     <section className="k-screen" data-screen="friend-wait" data-component="FriendWaitScreen">
       <TopBar back="friend-create" />
@@ -78,7 +93,7 @@ export function FriendWaitScreen({
             <span className="k-field__value">{inviteLink}</span>
             <button
               className="k-button k-button--ink k-button--sm"
-              onClick={() => void navigator.clipboard?.writeText('https://' + inviteLink)}
+              onClick={() => void navigator.clipboard?.writeText(inviteUrl)}
             >
               <Copy />
               <span>{t('friend.copy')}</span>
@@ -109,7 +124,14 @@ export function FriendWaitScreen({
   );
 }
 
-export function JoinCodeScreen({ prefill = '' }: { prefill?: string }) {
+export function JoinCodeScreen({
+  prefill = '',
+  onSubmit,
+}: {
+  prefill?: string;
+  /** Open the game with this code; without it the button opens a local game. */
+  onSubmit?: (code: string) => void;
+}) {
   const t = useT();
   const go = useGo();
   const [value, setValue] = useState(prefill);
@@ -155,7 +177,11 @@ export function JoinCodeScreen({ prefill = '' }: { prefill?: string }) {
           <button
             className="k-button k-button--primary k-button--lg k-button--block"
             disabled={v.length < 6}
-            onClick={go('game', { mode: 'friend', fixture: 'start', state: 'opponent-turn' })}
+            onClick={
+              onSubmit
+                ? () => onSubmit(v)
+                : go('game', { mode: 'friend', fixture: 'start', state: 'opponent-turn' })
+            }
           >
             <span>{t('join.submit')}</span>
           </button>

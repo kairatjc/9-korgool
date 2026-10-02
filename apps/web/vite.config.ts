@@ -19,7 +19,12 @@ function handoff(): Plugin {
 
 export default defineConfig({
   plugins: [react(), handoff()],
-  server: { port: 5173, strictPort: true },
+  server: {
+    port: 5173,
+    strictPort: true,
+    // The game server (apps/server) in dev; in production Caddy serves both on one origin.
+    proxy: { '/socket.io': { target: 'http://localhost:3000', ws: true } },
+  },
   // Pre-bundle everything up front: a dependency discovered later makes Vite reload open pages (flaky e2e).
   optimizeDeps: {
     include: [

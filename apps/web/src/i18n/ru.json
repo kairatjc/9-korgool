@@ -141,5 +141,14 @@
   "spec.states": "Состояния лунки",
   "spec.balls": "Шарики в лунке: 0–14, затем куча",
   "spec.kazan": "Шарики в казане: до 100, затем полный казан",
-  "spec.clock": "Часы"
+  "spec.clock": "Часы",
+  "online.notFound": "Партия не найдена",
+  "online.full": "В этой партии уже два игрока",
+  "online.error": "Не удалось связаться с сервером",
+  "game.drawOfferTitle": "Соперник предлагает ничью",
+  "game.drawAccept": "Согласиться на ничью",
+  "game.drawDecline": "Играть дальше",
+  "over.cancelled": "Партия отменена",
+  "over.reason.cancelled": "Первый ход не сделан за 30 секунд",
+  "over.reason.agreed": "Ничья по согласию"
 }

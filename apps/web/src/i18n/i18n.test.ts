@@ -20,10 +20,24 @@ const DEVIATIONS: Record<string, Partial<Record<'ru' | 'ky' | 'en', string>>> = 
   },
 };
 
+/** Strings the handoff does not have: online play (server errors, draw offers, cancelled games). */
+const ADDED = [
+  'online.notFound',
+  'online.full',
+  'online.error',
+  'game.drawOfferTitle',
+  'game.drawAccept',
+  'game.drawDecline',
+  'over.cancelled',
+  'over.reason.cancelled',
+  'over.reason.agreed',
+];
+
 describe('i18n', () => {
   for (const lang of ['ru', 'ky', 'en'] as const) {
     it(`${lang} has exactly the handoff keys and strings`, () => {
-      expect(Object.keys(langs[lang]).sort()).toEqual(Object.keys(copy).sort());
+      expect(Object.keys(langs[lang]).sort()).toEqual([...Object.keys(copy), ...ADDED].sort());
+      for (const key of ADDED) expect(langs[lang][key], key).toBeTruthy();
       for (const [key, entry] of Object.entries(copy)) {
         const expected = DEVIATIONS[key]?.[lang] ?? entry[lang] ?? entry.ru;
         expect(langs[lang][key], key).toBe(expected);
