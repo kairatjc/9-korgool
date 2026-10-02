@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { choiceClass, TopBar, useGo, type SideKind } from '../components/ui';
+import { BOT_LEVELS, type BotLevel } from '../game/bot';
 import { useT } from '../i18n';
 import { FieldGroup, SideSegmented, TimeChips, type TimeControl } from './setup';
-
-export const BOT_LEVELS = [1, 2, 3, 4] as const;
-export type BotLevel = (typeof BOT_LEVELS)[number];
 
 export function BotSetupScreen() {
   const t = useT();

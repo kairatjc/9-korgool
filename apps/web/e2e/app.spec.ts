@@ -48,8 +48,10 @@ test('bot game: the bot replies, undo restores the position', async ({ page }) =
   await page.getByRole('button', { name: 'Начать игру' }).click();
   await expect(page).toHaveURL(/mode=bot/);
   await expect(page.locator('.k-player--no-clock')).toHaveCount(2);
+  const worker = page.waitForEvent('worker');
   await pit(page, 0).click();
-  // Bot (Black) answers; then it is White's turn again.
+  // Bot (Black) answers from its Web Worker; then it is White's turn again.
+  expect((await worker).url()).toContain('bot.worker');
   await expect(page.locator('.k-player--me.k-player--active')).toHaveCount(1, { timeout: 5000 });
   await expect(page.locator('.k-moves__row')).toHaveCount(1);
   await page.locator('.k-game__action').first().click(); // Undo
