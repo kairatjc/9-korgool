@@ -1,0 +1,12 @@
+/* ── Settings list / Toggle ───────────────────── */
+.k-list { display: flex; flex-direction: column; border: var(--border-thin) solid var(--color-line); border-radius: var(--radius-lg); background: var(--color-surface); }
+.k-list__item { display: flex; align-items: center; gap: var(--space-6); min-height: var(--size-row); padding: var(--space-5) var(--space-7); }
+.k-list__item + .k-list__item { border-top: var(--border-thin) solid var(--color-line); }
+.k-list__item--stack { flex-direction: column; align-items: stretch; gap: var(--space-4); }
+.k-list__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.k-list__title { font-weight: var(--weight-medium); }
+.k-list__sub { font-size: var(--text-xs); color: var(--color-ink-muted); line-height: var(--leading-snug); }
+.k-toggle { width: var(--size-toggle-w); height: var(--size-toggle-h); flex: none; display: flex; justify-content: flex-start; padding: var(--size-toggle-pad); border: 0; border-radius: var(--radius-full); background: var(--color-line-strong); cursor: pointer; transition: background var(--duration-base) var(--ease-standard); }
+.k-toggle__knob { width: var(--size-toggle-knob); height: var(--size-toggle-knob); border-radius: var(--radius-full); background: var(--color-surface); box-shadow: var(--shadow-segment); }
+.k-toggle--on { justify-content: flex-end; background: var(--color-ink); }
+

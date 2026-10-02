@@ -19,6 +19,7 @@
 | [docs/roadmap.md](docs/roadmap.md)                             | Этапы разработки (MVP → релиз)                              |
 | [docs/design/handoff.md](docs/design/handoff.md)               | Как handoff из Claude Design переносится в код              |
 | [design/handoff/README.md](design/handoff/README.md)           | Эталонный дизайн (направление 1a «Жаңгак»): экраны, токены  |
+| [design/DEVIATIONS.md](design/DEVIATIONS.md)                   | Отличия реализации от дизайна                               |
 
 ## Коротко о стеке
 
@@ -37,8 +38,14 @@ pnpm typecheck   # проверка типов
 pnpm lint        # ESLint
 pnpm format      # Prettier
 pnpm design:serve  # прототип дизайна: http://127.0.0.1:4500/handoff/index.html
+pnpm --filter @korgool/web dev          # клиент: http://localhost:5173
+pnpm --filter @korgool/web test:visual  # попиксельное сравнение с дизайном (Playwright)
 ```
 
-| Пакет                                | Что внутри                                                                               |
-| ------------------------------------ | ---------------------------------------------------------------------------------------- |
-| [`packages/engine`](packages/engine) | `@korgool/engine` — правила игры: состояние, ходы, захват, туздук, конец партии, нотация |
+В dev-сборке клиента есть `/__design?screen=…` (экраны дизайна из фикстур) и `/__design/compare`
+(эталон и реализация рядом, наложение и разница).
+
+| Пакет                                | Что внутри                                                                                    |
+| ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| [`packages/engine`](packages/engine) | `@korgool/engine` — правила игры: состояние, ходы, захват, туздук, конец партии, нотация      |
+| [`apps/web`](apps/web)               | Веб-клиент: React + Vite, экраны из [дизайна](design/handoff/README.md), локальная игра и бот |

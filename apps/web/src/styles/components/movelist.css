@@ -1,0 +1,19 @@
+/* ── MoveList ─────────────────────────────────── */
+.k-moves { display: flex; flex-direction: column; min-height: 0; }
+.k-moves__strip { display: flex; align-items: center; gap: var(--space-5); width: 100%; min-height: var(--size-tap); padding: 0 var(--space-6); border: var(--border-thin) solid var(--color-line); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-ink-muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; text-align: left; cursor: pointer; }
+.k-moves__strip-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-moves__strip-text b { color: var(--color-ink); font-weight: var(--weight-semibold); }
+.k-moves__header { display: none; padding: var(--space-8) var(--space-8) var(--space-4); font-weight: var(--weight-semibold); }
+.k-moves__list { display: none; flex-direction: column; overflow: auto; min-height: 0; padding: 0 var(--space-6) var(--space-6); }
+.k-moves__row { display: grid; grid-template-columns: var(--size-move-num) minmax(0, 1fr) minmax(0, 1fr); padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+.k-moves__row:nth-child(even) { background: var(--color-bg); }
+.k-moves__num { color: var(--color-ink-muted); }
+.k-moves__move--last { color: var(--color-accent); font-weight: var(--weight-semibold); }
+.k-moves__empty { color: var(--color-ink-muted); font-size: var(--text-sm); padding: var(--space-3) var(--space-4); }
+@media (min-width: 1200px) {
+  .k-moves { flex: 1; }
+  .k-moves__strip { display: none; }
+  .k-moves__header { display: block; }
+  .k-moves__list { display: flex; }
+}
+

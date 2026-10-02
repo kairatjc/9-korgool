@@ -1,0 +1,95 @@
+/* ── Board (SVG) ──────────────────────────────── */
+.k-board-host { position: relative; width: 100%; height: 100%; }
+.k-board, .k-diagram { display: block; width: 100%; height: 100%; user-select: none; }
+.k-board-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: var(--z-fx); overflow: visible; }
+.k-stop--board-opp-1 { stop-color: var(--color-board-opp-1); }
+.k-stop--board-opp-2 { stop-color: var(--color-board-opp-2); }
+.k-stop--board-mine-1 { stop-color: var(--color-board-mine-1); }
+.k-stop--board-mine-2 { stop-color: var(--color-board-mine-2); }
+.k-stop--pit-1 { stop-color: var(--color-pit-1); }
+.k-stop--pit-2 { stop-color: var(--color-pit-2); }
+.k-stop--ball-hi { stop-color: var(--color-ball-hi); }
+.k-stop--ball-mid { stop-color: var(--color-ball-mid); }
+.k-stop--ball-lo { stop-color: var(--color-ball-lo); }
+.k-board__half--opp { fill: url(#k-grad-board-opp); }
+.k-board__half--mine { fill: url(#k-grad-board-mine); }
+.k-board__frame { fill: none; stroke: var(--color-board-frame); stroke-width: var(--board-frame-width); }
+.k-board__inlay { fill: none; stroke: var(--color-board-inlay); stroke-opacity: var(--opacity-inlay); stroke-width: var(--board-inlay-width); }
+.k-board__seam { fill: none; stroke: var(--color-board-inlay); stroke-opacity: var(--opacity-seam); stroke-width: var(--board-seam-width); }
+.k-board__medallion { color: var(--color-board-inlay); }
+.k-ball__body { fill: url(#k-grad-ball); }
+.k-ball__shadow { fill: var(--color-ball-shadow); }
+
+.k-pit__hit { fill: transparent; }
+.k-pit__ring { fill: none; stroke: none; stroke-width: var(--board-ring-width); }
+.k-pit__well, .k-kazan__well { fill: url(#k-grad-pit); stroke: var(--color-pit-edge); stroke-opacity: var(--opacity-edge); stroke-width: var(--board-edge-width); transition: fill-opacity var(--duration-fast) var(--ease-standard); }
+.k-pit__shade { fill: none; stroke: var(--color-pit-shade); stroke-width: var(--board-shade-width); }
+.k-pit__tint { fill: none; }
+.k-pit__balls { transition: opacity var(--duration-pickup) var(--ease-pickup), transform var(--duration-pickup) var(--ease-pickup); }
+.k-pit__mark { fill: none; stroke: none; stroke-linecap: round; }
+.k-board--h .k-pit__mark { stroke-width: var(--board-mark-width-h); }
+.k-board--v .k-pit__mark { stroke-width: var(--board-mark-width-v); }
+.k-pit__count, .k-kazan__count { transform-box: fill-box; transform-origin: center; }
+.k-pit__count-bg, .k-kazan__count-bg { fill: var(--color-pill-bg); }
+.k-pit__count-text, .k-kazan__count-text, .k-pit__preview-text { fill: var(--color-pill-ink); font-family: var(--font-ui); font-weight: var(--weight-semibold); }
+.k-pit__number { fill: var(--color-pit-num-opp); font-family: var(--font-ui); font-weight: var(--weight-medium); }
+.k-pit--mine .k-pit__number { fill: var(--color-pit-num-mine); }
+.k-board--h .k-pit__count-text { font-size: var(--board-h-count-size); }
+.k-board--h .k-pit__number { font-size: var(--board-h-number-size); }
+.k-board--h .k-kazan__count-text { font-size: var(--board-h-kazan-size); }
+.k-board--h .k-pit__preview-text { font-size: var(--board-h-preview-size); }
+.k-board--v .k-pit__count-text { font-size: var(--board-v-count-size); }
+.k-board--v .k-pit__number { font-size: var(--board-v-number-size); }
+.k-board--v .k-kazan__count-text { font-size: var(--board-v-kazan-size); }
+.k-board--v .k-pit__preview-text { font-size: var(--board-v-preview-size); }
+.k-pit__preview { display: none; }
+.k-pit__preview-bg { fill: var(--color-preview); }
+.k-pit__preview-text { fill: var(--color-preview-ink); }
+
+/* Pit states */
+.k-pit--legal { cursor: pointer; }
+.k-pit--legal .k-pit__ring { stroke: var(--color-pit-legal); }
+.k-pit--legal:hover .k-pit__ring, .k-pit--hover .k-pit__ring { stroke: var(--color-pit-hover); stroke-width: var(--board-ring-width-strong); }
+@media (hover: none) { .k-pit--legal:hover .k-pit__ring { stroke: var(--color-pit-legal); stroke-width: var(--board-ring-width); } }
+.k-pit--legal:active .k-pit__ring, .k-pit--pressed .k-pit__ring { stroke: var(--color-pit-pressed); stroke-width: var(--board-ring-width-strong); }
+.k-pit--legal:active .k-pit__well, .k-pit--pressed .k-pit__well { fill-opacity: var(--opacity-pressed); }
+.k-pit--disabled { cursor: default; }
+.k-pit--last-move-from .k-pit__ring { stroke: var(--color-pit-from); stroke-dasharray: var(--board-dash); }
+.k-pit--last-move-to .k-pit__count-bg { fill: var(--color-pit-to); }
+.k-pit--last-move-to .k-pit__count-text { fill: var(--color-pit-to-ink); }
+.k-pit--capture .k-pit__ring { stroke: var(--color-pit-capture); stroke-width: var(--board-ring-width-strong); stroke-dasharray: none; }
+.k-pit--capture .k-pit__tint { fill: var(--color-pit-capture); fill-opacity: var(--opacity-tint-strong); }
+.k-pit--capture .k-pit__count-bg { fill: var(--color-pit-capture); }
+.k-pit--capture .k-pit__count-text { fill: var(--color-pit-capture-ink); }
+.k-pit--tuzdyk-mine .k-pit__tint { fill: var(--color-tuzdyk-mine); fill-opacity: var(--opacity-tint); }
+.k-pit--tuzdyk-mine .k-pit__mark { stroke: var(--color-tuzdyk-mine); }
+.k-pit--tuzdyk-opponent .k-pit__tint { fill: var(--color-tuzdyk-opp); fill-opacity: var(--opacity-tint); }
+.k-pit--tuzdyk-opponent .k-pit__mark { stroke: var(--color-tuzdyk-opp); }
+.k-pit--tuzdyk-new .k-pit__mark { stroke-dasharray: 1; animation: k-mark-draw var(--duration-tuzdyk-mark) var(--ease-out) both; }
+.k-pit--hint { cursor: pointer; }
+.k-pit--hint .k-pit__ring { stroke: var(--color-pit-hint); stroke-width: var(--board-ring-width-strong); animation: k-hint var(--duration-hint-pulse) ease-in-out infinite; }
+.k-pit--hint .k-pit__tint { fill: var(--color-pit-hint); fill-opacity: var(--opacity-tint); }
+.k-pit--preview-target .k-pit__ring { stroke: var(--color-preview); stroke-width: var(--board-ring-width-strong); stroke-dasharray: var(--board-dash); }
+.k-pit--preview-target .k-pit__preview { display: inline; }
+.k-pit--lifting .k-pit__balls { opacity: 0; transform: translateY(var(--motion-lift-y)); }
+.k-pit--bump .k-pit__count, .k-kazan--bump .k-kazan__count { animation: k-bump var(--duration-counter-bump) var(--ease-bump); }
+
+/* Diagram (rules) */
+.k-dpit__well { fill: url(#k-grad-pit); stroke: var(--color-pit-edge); stroke-opacity: var(--opacity-edge); stroke-width: var(--board-edge-width); }
+.k-dpit__ring { fill: none; stroke: none; stroke-width: var(--board-ring-width); }
+.k-dpit__tint { fill: none; }
+.k-dpit__mark { fill: none; stroke: none; stroke-width: var(--board-mark-width-v); stroke-linecap: round; }
+.k-dpit__value { fill: var(--color-pill-bg); font-family: var(--font-ui); font-weight: var(--weight-semibold); font-size: var(--diagram-value-size); }
+.k-dpit__number { fill: var(--color-pit-num-opp); font-family: var(--font-ui); font-size: var(--diagram-number-size); font-weight: var(--weight-medium); }
+.k-dpit--mine .k-dpit__number { fill: var(--color-pit-num-mine); }
+.k-dpit--from .k-dpit__ring { stroke: var(--color-pit-from); stroke-dasharray: var(--board-dash); }
+.k-dpit--to .k-dpit__ring { stroke: var(--color-pit-to); }
+.k-dpit--capture .k-dpit__ring { stroke: var(--color-pit-capture); stroke-width: var(--board-ring-width-strong); }
+.k-dpit--capture .k-dpit__tint { fill: var(--color-pit-capture); fill-opacity: var(--opacity-tint-strong); }
+.k-dpit--tuzdyk-mine .k-dpit__tint { fill: var(--color-tuzdyk-mine); fill-opacity: var(--opacity-tint); }
+.k-dpit--tuzdyk-mine .k-dpit__mark { stroke: var(--color-tuzdyk-mine); }
+.k-dpit--tuzdyk-mine .k-dpit__value { display: none; }
+.k-diagram__arrow { fill: none; stroke: var(--color-diagram-arrow); stroke-width: var(--diagram-arrow-width); stroke-linejoin: round; }
+.k-diagram__arrowhead { fill: var(--color-diagram-arrow); }
+.k-diagram__label-bg { fill: var(--color-preview); }
+.k-diagram__label { fill: var(--color-preview-ink); font-family: var(--font-ui); font-weight: var(--weight-semibold); font-size: var(--diagram-label-size); }

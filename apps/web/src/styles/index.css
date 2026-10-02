@@ -1,0 +1,31 @@
+/* Handoff styles: tokens + components split from design/handoff/components.css.
+   Order matters (cascade) and is checked by src/styles/styles.test.ts. */
+@import './tokens.css';
+@import './components/base.css';
+@import './components/app-screen.css';
+@import './components/topbar.css';
+@import './components/logo.css';
+@import './components/button.css';
+@import './components/languageselect.css';
+@import './components/avatar.css';
+@import './components/badge-sidedot-pips.css';
+@import './components/page.css';
+@import './components/fieldgroup-choice-segmented-chips.css';
+@import './components/menu.css';
+@import './components/home.css';
+@import './components/field-share-roomcode-waiting.css';
+@import './components/codeinput.css';
+@import './components/search.css';
+@import './components/card.css';
+@import './components/playerplate-clock.css';
+@import './components/game-screen.css';
+@import './components/movelist.css';
+@import './components/banner-overlay-scrim-sheet-modal.css';
+@import './components/score.css';
+@import './components/profile-stats-history.css';
+@import './components/article.css';
+@import './components/tutorial-coach-progress.css';
+@import './components/settings-list-toggle.css';
+@import './components/spec-sheet.css';
+@import './components/devbar.css';
+@import './components/board.css';

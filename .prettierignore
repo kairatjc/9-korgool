@@ -3,3 +3,6 @@ pnpm-lock.yaml
 **/coverage
 docs
 design
+apps/web/src/styles
+apps/web/test-results
+apps/web/playwright-report

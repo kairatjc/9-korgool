@@ -1,0 +1,33 @@
+/* Strings are the handoff's copy.json with the same keys; every difference must be listed here
+   and in design/DEVIATIONS.md. */
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+import en from './en.json';
+import ky from './ky.json';
+import ru from './ru.json';
+
+type Copy = Record<string, Record<'ru' | 'ky' | 'en', string | undefined>>;
+const copy = JSON.parse(
+  readFileSync(new URL('../../../../design/handoff/copy.json', import.meta.url), 'utf8'),
+) as Copy;
+const langs = { ru, ky, en } as Record<'ru' | 'ky' | 'en', Record<string, string>>;
+
+/** Agreed copy changes: the pit is called «уя» (not «отау»). */
+const DEVIATIONS: Record<string, Partial<Record<'ru' | 'ky' | 'en', string>>> = {
+  'rules.boardText': {
+    ru: 'У каждого игрока 9 лунок — уя — и казан для выигранных шариков. В начале в каждой лунке по 9 шариков, всего 162.',
+    en: 'Each player has 9 pits (uya) and a kazan for captured korgools. Every pit starts with 9 korgools, 162 in total.',
+  },
+};
+
+describe('i18n', () => {
+  for (const lang of ['ru', 'ky', 'en'] as const) {
+    it(`${lang} has exactly the handoff keys and strings`, () => {
+      expect(Object.keys(langs[lang]).sort()).toEqual(Object.keys(copy).sort());
+      for (const [key, entry] of Object.entries(copy)) {
+        const expected = DEVIATIONS[key]?.[lang] ?? entry[lang] ?? entry.ru;
+        expect(langs[lang][key], key).toBe(expected);
+      }
+    });
+  }
+});

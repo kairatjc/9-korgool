@@ -1,0 +1,5 @@
+/* ── DevBar (prototype only) ──────────────────── */
+.k-devbar { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: var(--z-devbar); display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-full); background: var(--color-ink); color: var(--color-ink-inverse); box-shadow: var(--shadow-modal); font-size: var(--text-sm); }
+.k-devbar__select { appearance: none; border: 0; border-radius: var(--radius-full); padding: 0 var(--space-6); min-height: var(--size-button-sm); background: var(--color-ink-inverse-track); color: var(--color-ink-inverse); cursor: pointer; }
+@media (max-width: 767px) { .k-devbar { top: calc(var(--size-topbar) + var(--space-2)); bottom: auto; } }
+

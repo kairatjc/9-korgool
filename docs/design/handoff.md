@@ -44,6 +44,18 @@
 | иконки Lucide | `lucide-react` | те же имена |
 | шрифты | `<link>` в `index.html` | те же семейства и веса |
 
+Как это сделано в `apps/web`:
+- `src/styles/tokens.css` — копия байт в байт; `src/styles/components/*.css` — `components.css`, разрезанный по
+  секциям, подключается из `src/styles/index.css` в исходном порядке. Тест `src/styles/styles.test.ts` проверяет,
+  что склейка частей равна оригиналу, поэтому стили нельзя «подправить» незаметно.
+- `src/board/geometry.ts`, `Board.tsx`, `Diagram.tsx` — порт `board.js`; тест `src/board/board.test.tsx`
+  сравнивает разметку React-доски с `renderBoard` из handoff на всех фикстурах и состояниях лунок, а события
+  движка — с `computeMove`.
+- `src/board/motion.ts` — порт `motion.js` (те же токены длительностей и easing).
+- `src/i18n/{ru,ky,en}.json` — из `copy.json`; тест сверяет строки с оригиналом (отличия — только из
+  `design/DEVIATIONS.md`).
+- Tailwind и shadcn/ui пока не понадобились: вся раскладка есть в handoff.
+
 Запреты для реализации:
 - не подменять стили дефолтами shadcn/ui: shadcn (Radix) используется только как **поведение**
   (фокус, модалки, доступность), внешний вид — классы из handoff;
@@ -58,9 +70,12 @@
 - **реализация**: dev-маршрут `/__design?screen=X&fixture=Y&state=Z&static=1` в `apps/web`
   (только в dev-сборке; рендерит тот же экран из той же фикстуры, через `parse()` движка).
 
+Dev-сервер `apps/web` раздаёт эталон по адресу `/__handoff/` — обе страницы открываются с одного сервера.
+Список экранов — `apps/web/src/design/screens.ts`. Запуск: `pnpm --filter @korgool/web test:visual`.
+
 Playwright-тест (`apps/web/e2e/visual.spec.ts`) снимает обе страницы в одинаковых условиях —
 вьюпорты **360×780, 390×844, 1440×900**, шрифты загружены, анимации выключены — и сравнивает
-через `pixelmatch`:
+через `pixelmatch` (Lucide для эталона берётся из `node_modules`, а не с unpkg):
 
 - порог: **≤ 0.5 %** отличающихся пикселей на экран (сглаживание шрифтов даёт шум);
 - при превышении — тест падает и сохраняет `expected.png`, `actual.png`, `diff.png`

@@ -1,0 +1,15 @@
+/* ── Badge / SideDot / Pips ───────────────────── */
+.k-badge { display: inline-flex; align-items: center; gap: var(--space-2); height: var(--size-badge); padding: 0 var(--space-4); border-radius: var(--radius-full); font-size: var(--text-2xs); font-weight: var(--weight-semibold); white-space: nowrap; flex: none; }
+.k-badge .lucide { width: var(--size-icon-sm); height: var(--size-icon-sm); }
+.k-badge--accent { background: var(--color-accent); color: var(--color-accent-ink); }
+.k-badge--muted { background: var(--color-surface-sunken); color: var(--color-ink-muted); }
+.k-badge--success { background: var(--color-success-soft); color: var(--color-success); }
+.k-badge--danger { background: var(--color-danger-soft); color: var(--color-danger); }
+.k-side-dot { width: var(--size-dot); height: var(--size-dot); flex: none; border-radius: var(--radius-full); }
+.k-side-dot--white { background: var(--color-side-white); border: var(--border-thin) solid var(--color-ink); }
+.k-side-dot--black { background: var(--color-side-black); border: var(--border-thin) solid var(--color-side-black); }
+.k-side-dot--random { background: linear-gradient(90deg, var(--color-side-white) 50%, var(--color-side-black) 50%); border: var(--border-thin) solid var(--color-ink); }
+.k-pips { display: flex; gap: var(--space-1); }
+.k-pips__pip { width: var(--size-pip); height: var(--size-pip); border-radius: var(--radius-full); background: var(--color-line-strong); }
+.k-pips__pip--on { background: var(--color-accent); }
+

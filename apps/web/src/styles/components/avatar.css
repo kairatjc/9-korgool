@@ -1,0 +1,8 @@
+/* ── Avatar ───────────────────────────────────── */
+.k-avatar { width: var(--size-avatar); height: var(--size-avatar); flex: none; display: grid; place-items: center; border-radius: var(--radius-full); background: var(--color-side-black); color: var(--color-ink-inverse); font-weight: var(--weight-semibold); font-size: var(--text-md); }
+.k-avatar--light { background: var(--color-side-white); color: var(--color-ink); border: var(--border-thick) solid var(--color-ink); }
+.k-avatar--sm { width: var(--size-avatar-sm); height: var(--size-avatar-sm); font-size: var(--text-sm); }
+.k-avatar--lg { width: var(--size-avatar-lg); height: var(--size-avatar-lg); font-size: var(--text-lg); }
+.k-avatar--xl { width: var(--size-avatar-xl); height: var(--size-avatar-xl); font-family: var(--font-display); font-size: var(--text-3xl); }
+.k-avatar .lucide { width: var(--size-icon); height: var(--size-icon); }
+

@@ -1,0 +1,12 @@
+/* ── Home ─────────────────────────────────────── */
+.k-home__body { flex: 1; width: 100%; max-width: var(--size-content); margin: 0 auto; display: grid; grid-template-areas: "logo" "board" "actions"; align-content: start; gap: var(--space-9); padding: var(--space-2) var(--space-7) var(--space-9); }
+.k-home__logo { grid-area: logo; }
+.k-home__board { grid-area: board; aspect-ratio: 1000 / 480; }
+.k-home__actions { grid-area: actions; display: flex; flex-direction: column; gap: var(--space-4); }
+.k-home__links { display: flex; justify-content: center; gap: var(--space-9); }
+@media (min-width: 1024px) {
+  .k-home__body { max-width: var(--size-home); grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); grid-template-areas: "board logo" "board actions"; align-content: center; align-items: center; column-gap: var(--space-13); row-gap: var(--space-10); padding: var(--space-11); }
+  .k-home__logo { align-self: end; }
+  .k-home__actions { align-self: start; }
+}
+

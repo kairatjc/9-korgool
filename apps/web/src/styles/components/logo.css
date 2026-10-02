@@ -1,0 +1,10 @@
+/* ── Logo ─────────────────────────────────────── */
+.k-logo { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); text-align: center; color: var(--color-ink); }
+.k-logo:hover { text-decoration: none; color: var(--color-ink); }
+.k-logo__mark { width: var(--size-logo-mark); height: var(--size-logo-mark); color: var(--color-accent); }
+.k-logo__name { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.k-logo__tagline { font-size: var(--text-sm); color: var(--color-ink-muted); }
+.k-logo--inline { flex-direction: row; gap: var(--space-4); }
+.k-logo--inline .k-logo__mark { width: var(--size-logo-mark-sm); height: var(--size-logo-mark-sm); }
+.k-logo--inline .k-logo__name { font-size: var(--text-lg); }
+

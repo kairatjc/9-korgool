@@ -1,0 +1,4 @@
+src/styles
+test-results
+playwright-report
+dist
