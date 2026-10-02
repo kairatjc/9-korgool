@@ -1,60 +1,61 @@
-/* A small placeholder bot until the engine gets its own AI (docs/architecture.md, engine/ai):
-   alpha-beta search over the real engine, depth by level. Level 1 plays a random legal move. */
-import { applyMove, legalMoves, type GameState, type Pit, type Side } from '@korgool/engine';
+/* Client side of the bot: @korgool/engine's chooseMove, run in a Web Worker (bot.worker.ts).
+   Falls back to the main thread where workers are unavailable (unit tests) or the worker fails. */
+import { chooseMove, type BotLevel, type GameState, type Pit } from '@korgool/engine';
 
-const DEPTH = { 1: 0, 2: 1, 3: 3, 4: 5 } as const;
-export type Level = keyof typeof DEPTH;
-export const isLevel = (v: number): v is Level => v === 1 || v === 2 || v === 3 || v === 4;
+export { BOT_LEVELS, isBotLevel, type BotLevel } from '@korgool/engine';
 
-const WIN = 1000;
-const TUZDYK_BONUS = 6;
-
-function evaluate(s: GameState, side: Side): number {
-  const me = side === 'white' ? 0 : 1;
-  const opp = me === 0 ? 1 : 0;
-  if (s.status === 'draw') return 0;
-  if (s.status !== 'playing') return (s.status === `${side}_won` ? 1 : -1) * WIN;
-  const tz =
-    (s.tuzdyks[me] !== null ? TUZDYK_BONUS : 0) - (s.tuzdyks[opp] !== null ? TUZDYK_BONUS : 0);
-  return s.kazans[me] - s.kazans[opp] + tz;
+export interface BotRequest {
+  id: number;
+  state: GameState;
+  level: BotLevel;
+}
+export interface BotResponse {
+  id: number;
+  pit: Pit | null;
 }
 
-function search(s: GameState, depth: number, alpha: number, beta: number, side: Side): number {
-  if (depth === 0 || s.status !== 'playing') return evaluate(s, side);
-  const maximize = s.turn === side;
-  let best = maximize ? -Infinity : Infinity;
-  for (const pit of legalMoves(s)) {
-    const v = search(applyMove(s, pit).state, depth - 1, alpha, beta, side);
-    if (maximize) {
-      best = Math.max(best, v);
-      alpha = Math.max(alpha, v);
-    } else {
-      best = Math.min(best, v);
-      beta = Math.min(beta, v);
-    }
-    if (beta <= alpha) break;
-  }
-  return best;
+interface Pending {
+  resolve: (pit: Pit | null) => void;
+  request: BotRequest;
 }
 
-/** Best move (pit 1..9) for the player to move, or `null` if there is none. */
-export function chooseMove(
-  s: GameState,
-  level: Level,
-  random: () => number = Math.random,
-): Pit | null {
-  const moves = legalMoves(s);
-  if (moves.length === 0) return null;
-  const depth = DEPTH[level];
-  if (depth === 0) return moves[Math.floor(random() * moves.length)] ?? null;
-  let best: Pit | null = null,
-    bestV = -Infinity;
-  for (const pit of moves) {
-    const v = search(applyMove(s, pit).state, depth - 1, -Infinity, Infinity, s.turn);
-    if (v > bestV) {
-      bestV = v;
-      best = pit;
-    }
+let worker: Worker | null = null;
+let broken = false;
+let nextId = 0;
+const pending = new Map<number, Pending>();
+
+function getWorker(): Worker | null {
+  if (worker || broken || typeof Worker === 'undefined') return worker;
+  try {
+    worker = new Worker(new URL('./bot.worker.ts', import.meta.url), { type: 'module' });
+  } catch {
+    broken = true;
+    return null;
   }
-  return best;
+  worker.onmessage = (e: MessageEvent<BotResponse>) => {
+    const job = pending.get(e.data.id);
+    pending.delete(e.data.id);
+    job?.resolve(e.data.pit);
+  };
+  worker.onerror = () => {
+    // The worker could not load or crashed: answer what is waiting on the main thread and stop using it.
+    broken = true;
+    worker?.terminate();
+    worker = null;
+    for (const { resolve, request } of pending.values())
+      resolve(chooseMove(request.state, request.level));
+    pending.clear();
+  };
+  return worker;
+}
+
+/** The bot's move (pit 1..9) for the player to move, or `null` if there is none. */
+export function botMove(state: GameState, level: BotLevel): Promise<Pit | null> {
+  const w = getWorker();
+  if (!w) return Promise.resolve(chooseMove(state, level));
+  const request: BotRequest = { id: nextId++, state, level };
+  return new Promise((resolve) => {
+    pending.set(request.id, { resolve, request });
+    w.postMessage(request);
+  });
 }

@@ -73,10 +73,10 @@ export interface GameScreenProps {
   autoFlip?: boolean;
   /** Vibrate on moves and captures (phones). */
   vibrate?: boolean;
-  /** Opponent's move for the given position (bot games). */
-  bot?: ((s: GameState) => Pit | null) | undefined;
+  /** Opponent's move for the given position (bot games); computed off the main thread. */
+  bot?: ((s: GameState) => Promise<Pit | null>) | undefined;
   /** Suggested move for the player (Hint). */
-  hintMove?: ((s: GameState) => Pit | null) | undefined;
+  hintMove?: ((s: GameState) => Promise<Pit | null>) | undefined;
   /** Called on confirmed resignation; by default the result modal is shown. */
   onResign?: (() => void) | undefined;
   onRematch: () => void;
@@ -283,6 +283,9 @@ export function GameScreen(p: GameScreenProps) {
   const [devSpeed, setDevSpeed] = useState<Speed>(env.speed);
   const [moved, setMoved] = useState(false);
   const history = useRef<Snapshot[]>([]);
+  // The position an async hint was asked for may be gone by the time it arrives.
+  const stRef = useRef(st);
+  stRef.current = st;
   const fxRef = useRef<SVGSVGElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const alive = useRef(true);
@@ -355,11 +358,15 @@ export function GameScreen(p: GameScreenProps) {
   useEffect(() => {
     if (!bot || busy || isOver || p.hotSeat || st.status !== 'playing' || st.turn === player)
       return;
-    const id = setTimeout(() => {
-      const pit = bot(st);
-      if (pit !== null) void move(pit);
-    }, BOT_DELAY);
-    return () => clearTimeout(id);
+    // The reply comes no sooner than BOT_DELAY, so a quick bot does not look instant.
+    let cancelled = false;
+    const delay = new Promise((resolve) => setTimeout(resolve, BOT_DELAY));
+    void Promise.all([bot(st), delay]).then(([pit]) => {
+      if (!cancelled && pit !== null) void move(pit);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [st, busy, isOver]);
 
   function onPit(i: number) {
@@ -379,8 +386,11 @@ export function GameScreen(p: GameScreenProps) {
 
   function showHint() {
     if (busy || isOver || st.turn !== player || !p.hintMove) return;
-    const pit = p.hintMove(st);
-    if (pit !== null) setHint((player === 'white' ? 0 : 9) + pit - 1);
+    const at = st;
+    void p.hintMove(at).then((pit) => {
+      if (pit !== null && alive.current && stRef.current === at)
+        setHint((player === 'white' ? 0 : 9) + pit - 1);
+    });
   }
 
   function confirmResign() {

@@ -12,7 +12,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import { AppContext, useApp, type AppEnv, type Params, type ScreenId } from './app';
 import { Sprite } from './board/Sprite';
 import type { SideKind } from './components/ui';
-import { chooseMove, isLevel, type Level } from './game/bot';
+import { botMove, isBotLevel, type BotLevel } from './game/bot';
 import { DATA, fixture } from './game/fixtures';
 import { useT } from './i18n';
 import { BotSetupScreen } from './screens/BotSetupScreen';
@@ -145,7 +145,7 @@ function Game() {
   const search = useSearch({ strict: false }) as Params;
   const mode: GameMode = GAME_MODES.find((m) => m === search.mode) ?? 'local';
   const levelN = Number(search.level ?? 2);
-  const level: Level = isLevel(levelN) ? levelN : 2;
+  const level: BotLevel = isBotLevel(levelN) ? levelN : 2;
   const [me] = useState<Side>(() => (mode === 'bot' ? resolveSide(search.side) : 'white'));
   const nonce = search.n ?? '0';
   const hotSeat = mode !== 'bot';
@@ -176,8 +176,8 @@ function Game() {
       hotSeat={hotSeat}
       autoFlip={settings.prefs.flip}
       vibrate={settings.prefs.vibration}
-      bot={mode === 'bot' ? (s) => chooseMove(s, level) : undefined}
-      hintMove={(s) => chooseMove(s, 4)}
+      bot={mode === 'bot' ? (s) => botMove(s, level) : undefined}
+      hintMove={(s) => botMove(s, 4)}
       onRematch={() => go('game', { ...search, n: String(Number(nonce) + 1) })}
     />
   );
