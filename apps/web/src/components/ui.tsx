@@ -1,9 +1,16 @@
 /* Shared app-shell pieces. Markup and classes follow design/handoff/index.html one-to-one. */
-import { ArrowLeft, Bot } from 'lucide-react';
-import type { MouseEvent, ReactNode } from 'react';
+import { ArrowLeft, Bot, Check, ChevronDown, Globe } from 'lucide-react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import { useApp, type Params, type ScreenId } from '../app';
 import { Ornament } from '../board/Sprite';
-import { useT } from '../i18n';
+import { LANGS, useT, type Lang } from '../i18n';
 
 /** Navigation handler for buttons / links: `onClick={useGo()('home')}`. */
 export function useGo() {
@@ -101,4 +108,80 @@ export function AvatarContent({ person }: { person: Person }) {
 /** A single-choice group whose items toggle `<base>--selected` (generic `data-choice-group` in the prototype). */
 export function choiceClass(base: string, selected: boolean, extra = ''): string {
   return [base, extra, selected ? `${base}--selected` : ''].filter(Boolean).join(' ');
+}
+
+/** Language picker: a pill button opening a styled listbox (a native <select> popup can't be themed). */
+export function LanguageSelect({ lang, onLang }: { lang: Lang; onLang: (lang: Lang) => void }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const options = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!open) return;
+    options.current[LANGS.indexOf(lang)]?.focus();
+    const onDown = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [open, lang]);
+
+  const close = () => {
+    setOpen(false);
+    button.current?.focus();
+  };
+  const pick = (l: Lang) => {
+    onLang(l);
+    close();
+  };
+  const onKey = (e: KeyboardEvent) => {
+    const i = options.current.indexOf(document.activeElement as HTMLButtonElement);
+    const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+    if (e.key === 'Escape') close();
+    else if (e.key === 'Tab') setOpen(false);
+    else if (step) {
+      e.preventDefault();
+      options.current[(i + step + LANGS.length) % LANGS.length]?.focus();
+    }
+  };
+
+  return (
+    <div className="k-lang" data-component="LanguageSelect" ref={root} onKeyDown={onKey}>
+      <button
+        ref={button}
+        type="button"
+        className="k-lang__button"
+        aria-label="Language"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <Globe />
+        <span className="k-lang__value">{t(`lang.${lang}`)}</span>
+        <ChevronDown className="k-lang__chevron" />
+      </button>
+      {open && (
+        <div className="k-lang__menu" role="listbox" aria-label="Language">
+          {LANGS.map((l, i) => (
+            <button
+              key={l}
+              ref={(el) => {
+                options.current[i] = el;
+              }}
+              type="button"
+              role="option"
+              aria-selected={l === lang}
+              className={choiceClass('k-lang__option', l === lang)}
+              onClick={() => pick(l)}
+            >
+              <span>{t(`lang.${l}`)}</span>
+              {l === lang && <Check />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }

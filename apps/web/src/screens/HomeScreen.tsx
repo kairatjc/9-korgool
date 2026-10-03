@@ -1,19 +1,9 @@
-import {
-  BookOpen,
-  Bot,
-  ChevronDown,
-  ChevronRight,
-  Globe,
-  GraduationCap,
-  LogIn,
-  Smartphone,
-  Users,
-} from 'lucide-react';
+import { BookOpen, Bot, ChevronRight, GraduationCap, LogIn, Smartphone, Users } from 'lucide-react';
 import { useApp } from '../app';
 import { BoardHost } from '../board/Board';
-import { useGo, Logo } from '../components/ui';
+import { useGo, LanguageSelect, Logo } from '../components/ui';
 import { fixture } from '../game/fixtures';
-import { LANGS, useT, type Lang } from '../i18n';
+import { useT, type Lang } from '../i18n';
 
 const START = fixture('start');
 
@@ -32,22 +22,7 @@ export function HomeScreen({
   return (
     <section className="k-screen k-home" data-screen="home" data-component="HomeScreen">
       <header className="k-topbar" data-component="TopBar">
-        <label className="k-lang" data-component="LanguageSelect">
-          <Globe />
-          <select
-            className="k-lang__select"
-            aria-label="Language"
-            value={lang}
-            onChange={(e) => onLang(e.target.value as Lang)}
-          >
-            {LANGS.map((l) => (
-              <option key={l} value={l}>
-                {t(`lang.${l}`)}
-              </option>
-            ))}
-          </select>
-          <ChevronDown />
-        </label>
+        <LanguageSelect lang={lang} onLang={onLang} />
         <div className="k-topbar__spacer"></div>
         {signedIn ? (
           <button className="k-icon-button" aria-label="Profile" onClick={go('profile')}>
