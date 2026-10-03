@@ -82,6 +82,7 @@ function Root() {
       },
       isStatic: false,
       speed: settings.speed,
+      settings: (close) => <Settings onBack={close} />,
     }),
     [navigate, settings.speed],
   );
@@ -161,10 +162,11 @@ function OnlineGame() {
   return <OnlineGameScreen key={gameId} gameId={(gameId ?? '').toUpperCase()} />;
 }
 
-function Settings() {
+function Settings({ onBack }: { onBack?: () => void }) {
   const s = useAppSettings();
   return (
     <SettingsScreen
+      onBack={onBack}
       lang={s.lang}
       onLang={s.setLang}
       speed={s.speed}
@@ -242,7 +244,7 @@ const routes = [
   )),
   page('/rules', RulesScreen),
   page('/tutorial', TutorialScreen),
-  page('/settings', Settings),
+  page('/settings', () => <Settings />),
 ];
 
 export const router = createRouter({ routeTree: rootRoute.addChildren(routes) });

@@ -37,6 +37,7 @@ export function SettingsScreen({
   onSpeed,
   prefs: initialPrefs = { sound: true, vibration: true, flip: false },
   onPrefs,
+  onBack,
 }: {
   lang: Lang;
   onLang: (lang: Lang) => void;
@@ -44,6 +45,8 @@ export function SettingsScreen({
   onSpeed: (speed: Speed) => void;
   prefs?: Prefs;
   onPrefs?: (prefs: Prefs) => void;
+  /** Back button handler; by default it goes home. */
+  onBack?: (() => void) | undefined;
 }) {
   const t = useT();
   const [prefs, setPrefs] = useState(initialPrefs);
@@ -54,7 +57,7 @@ export function SettingsScreen({
   };
   return (
     <section className="k-screen" data-screen="settings" data-component="SettingsScreen">
-      <TopBar />
+      <TopBar onBack={onBack} />
       <main className="k-page">
         <h1 className="k-page__title">{t('settings.title')}</h1>
         <div className="k-list" data-component="SettingsList">
