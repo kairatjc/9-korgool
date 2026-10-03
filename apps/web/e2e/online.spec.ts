@@ -72,6 +72,25 @@ test('friend game over the server: moves, clocks, reconnect, draw by agreement',
   }
 });
 
+test('settings during an online game: Back returns to the game, still connected', async ({
+  browser,
+}) => {
+  const { alice, bek, code } = await start(browser);
+  await alice.getByRole('button', { name: 'Settings' }).click();
+  await expect(alice.locator('[data-screen="settings"]')).toBeVisible();
+  await alice.getByRole('button', { name: 'Back' }).click();
+  await expect(alice).toHaveURL(new RegExp(`/g/${code}$`));
+  await pit(alice, 8).click();
+  await expect.poll(() => kazan(bek, 'white')).toBe(10);
+  // Bek moves while Alice is in the settings: she sees it when she comes back.
+  await alice.getByRole('button', { name: 'Settings' }).click();
+  await pit(bek, 9).click();
+  await alice.getByRole('button', { name: 'Back' }).click();
+  await expect(alice.locator('.k-moves__row')).toHaveCount(1);
+  await expect(alice.locator('.k-player--me.k-player--active')).toHaveCount(1);
+  await expect(alice.locator('.k-banner')).toHaveCount(0);
+});
+
 test('resignation ends the game for both', async ({ browser }) => {
   const { alice, bek } = await start(browser);
   await pit(alice, 6).click();
