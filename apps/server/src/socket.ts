@@ -33,6 +33,8 @@ type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents, object, Soc
 export interface GameSocketOptions extends GameRegistryOptions {
   /** Адрес клиента для ссылок-приглашений: `${publicUrl}/g/AB12CD`. */
   publicUrl: string;
+  /** Ошибка в обработчике события: в лог и Sentry. Клиент получает `server_error`. */
+  onError?: (error: unknown, event: string) => void;
 }
 
 const sideRoom = (gameId: string, side: Side) => `${gameId}:${side}`;
@@ -40,6 +42,7 @@ const sideRoom = (gameId: string, side: Side) => `${gameId}:${side}`;
 /** Подключает обработчики партий к серверу Socket.IO. */
 export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
   const guests = new GuestSessions();
+  const report = options.onError ?? ((error: unknown) => console.error(error));
 
   const outputFor = (gameId: string): GameOutput => ({
     start(game) {
@@ -82,7 +85,7 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
       game.connect(side);
     };
 
-    on(socket, 'game:create', createGameSchema, (payload) => {
+    on(socket, report, 'game:create', createGameSchema, (payload) => {
       const game = games.create(player, payload.timeControl, payload.color);
       const side = game.sideOf(player.id);
       if (side) attach(game, side);
@@ -93,7 +96,7 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
       };
     });
 
-    on(socket, 'game:join', gameRefSchema, ({ gameId }) => {
+    on(socket, report, 'game:join', gameRefSchema, ({ gameId }) => {
       const game = games.get(gameId);
       if (!game) return fail('not_found');
       const joined = game.join(player);
@@ -103,20 +106,20 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
       return { ok: true, game: game.snapshot(player.id) };
     });
 
-    on(socket, 'game:move', moveSchema, ({ gameId, pit, ply }) =>
+    on(socket, report, 'game:move', moveSchema, ({ gameId, pit, ply }) =>
       withGame(gameId, (game) => game.move(player.id, pit, ply)),
     );
-    on(socket, 'game:resign', gameRefSchema, ({ gameId }) =>
+    on(socket, report, 'game:resign', gameRefSchema, ({ gameId }) =>
       withGame(gameId, (game) => game.resign(player.id)),
     );
-    on(socket, 'game:draw-offer', gameRefSchema, ({ gameId }) =>
+    on(socket, report, 'game:draw-offer', gameRefSchema, ({ gameId }) =>
       withGame(gameId, (game) => game.offerDraw(player.id)),
     );
-    on(socket, 'game:draw-answer', drawAnswerSchema, ({ gameId, accept }) =>
+    on(socket, report, 'game:draw-answer', drawAnswerSchema, ({ gameId, accept }) =>
       withGame(gameId, (game) => game.answerDraw(player.id, accept)),
     );
 
-    on(socket, 'queue:join', emptySchema, () => {
+    on(socket, report, 'queue:join', emptySchema, () => {
       const pair = queue.join(player, socket.id);
       if (pair) {
         // Партия начинается сразу; игроки входят в неё через `game:join` и тем самым подключаются.
@@ -126,7 +129,7 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
       }
       return { ok: true };
     });
-    on(socket, 'queue:leave', emptySchema, () => {
+    on(socket, report, 'queue:leave', emptySchema, () => {
       queue.leave(player.id);
       return { ok: true };
     });
@@ -154,13 +157,21 @@ const fail = (error: ErrorCode) => ({ ok: false, error }) as const;
  */
 function on<E extends keyof ClientToServerEvents, S extends z.ZodType>(
   socket: GameSocket,
+  report: (error: unknown, event: string) => void,
   event: E,
   schema: S,
   handler: (payload: z.infer<S>) => Ack<object>,
 ) {
   const listener = (raw: unknown, ack: unknown) => {
     const parsed = schema.safeParse(raw);
-    const response = parsed.success ? handler(parsed.data) : fail('invalid_payload');
+    let response: Ack<object>;
+    try {
+      response = parsed.success ? handler(parsed.data) : fail('invalid_payload');
+    } catch (error) {
+      // Ошибка в одной партии не должна ронять сервер со всеми остальными.
+      report(error, event);
+      response = fail('server_error');
+    }
     if (typeof ack === 'function') (ack as (r: Ack<object>) => void)(response);
   };
   socket.on(event, listener as never);

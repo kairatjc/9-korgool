@@ -43,3 +43,16 @@ jobs:
             apps/web/playwright-report
             apps/web/test-results
           retention-days: 7
+
+  # Образы для деплоя собираются, сервер из образа отвечает на /health (docs/deploy.md).
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build --target server -t korgool-server .
+      - run: docker build --target web -t korgool-web .
+      - name: Server image starts
+        run: |
+          docker run -d --name server -p 3000:3000 korgool-server
+          for i in $(seq 1 20); do curl -fsS http://localhost:3000/health && exit 0; sleep 1; done
+          docker logs server && exit 1
