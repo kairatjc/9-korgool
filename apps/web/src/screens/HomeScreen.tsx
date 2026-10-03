@@ -1,12 +1,4 @@
-import {
-  BookOpen,
-  Bot,
-  ChevronRight,
-  GraduationCap,
-  LogIn,
-  Smartphone,
-  Users,
-} from 'lucide-react';
+import { BookOpen, Bot, ChevronRight, GraduationCap, LogIn, Smartphone, Users } from 'lucide-react';
 import { useApp } from '../app';
 import { BoardHost } from '../board/Board';
 import { useGo, LanguageSelect, Logo } from '../components/ui';

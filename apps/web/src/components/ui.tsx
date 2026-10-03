@@ -1,6 +1,13 @@
 /* Shared app-shell pieces. Markup and classes follow design/handoff/index.html one-to-one. */
 import { ArrowLeft, Bot, Check, ChevronDown, Globe } from 'lucide-react';
-import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import { useApp, type Params, type ScreenId } from '../app';
 import { Ornament } from '../board/Sprite';
 import { LANGS, useT, type Lang } from '../i18n';

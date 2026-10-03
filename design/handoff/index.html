@@ -17,15 +17,16 @@
 <!-- ═════════ HOME ═════════ -->
 <section class="k-screen k-home" data-screen="home" data-component="HomeScreen" hidden>
   <header class="k-topbar" data-component="TopBar">
-    <label class="k-lang" data-component="LanguageSelect">
-      <i data-lucide="globe"></i>
-      <select class="k-lang__select" data-lang-select aria-label="Language">
-        <option value="ky" data-i18n="lang.ky"></option>
-        <option value="ru" data-i18n="lang.ru"></option>
-        <option value="en" data-i18n="lang.en"></option>
-      </select>
-      <i data-lucide="chevron-down"></i>
-    </label>
+    <div class="k-lang" data-component="LanguageSelect" data-lang-select>
+      <button type="button" class="k-lang__button" aria-label="Language" aria-haspopup="listbox" aria-expanded="false">
+        <i data-lucide="globe"></i><span class="k-lang__value"></span><i data-lucide="chevron-down" class="k-lang__chevron"></i>
+      </button>
+      <div class="k-lang__menu" role="listbox" aria-label="Language" hidden>
+        <button type="button" class="k-lang__option" role="option" data-lang-option="ky"><span data-i18n="lang.ky"></span><i data-lucide="check"></i></button>
+        <button type="button" class="k-lang__option" role="option" data-lang-option="ru"><span data-i18n="lang.ru"></span><i data-lucide="check"></i></button>
+        <button type="button" class="k-lang__option" role="option" data-lang-option="en"><span data-i18n="lang.en"></span><i data-lucide="check"></i></button>
+      </div>
+    </div>
     <div class="k-topbar__spacer"></div>
     <button class="k-button k-button--ghost k-button--sm" data-go="sign-in" data-when="guest"><i data-lucide="log-in"></i><span data-i18n="home.signIn"></span></button>
     <button class="k-icon-button" data-go="profile" data-when="signed-in" aria-label="Profile"><span class="k-avatar k-avatar--sm k-avatar--light">А</span></button>

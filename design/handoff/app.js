@@ -100,9 +100,18 @@
 
   screens.home = root => {
     $$('[data-when]', root).forEach(el => show(el, (el.dataset.when === 'signed-in') === P.auth));
-    const sel = $('[data-lang-select]', root);
-    sel.value = P.lang;
-    sel.addEventListener('change', () => setLang(sel.value));
+    const sel = $('[data-lang-select]', root), btn = $('.k-lang__button', sel), menu = $('.k-lang__menu', sel);
+    $('.k-lang__value', sel).textContent = t('lang.' + P.lang);
+    $$('[data-lang-option]', sel).forEach(o => {
+      const on = o.dataset.langOption === P.lang;
+      o.setAttribute('aria-selected', String(on));
+      o.classList.toggle('k-lang__option--selected', on);
+      if (!on) $('[data-lucide]', o).remove();
+      o.addEventListener('click', () => setLang(o.dataset.langOption));
+    });
+    const open = on => { menu.hidden = !on; btn.setAttribute('aria-expanded', String(on)); };
+    btn.addEventListener('click', () => open(menu.hidden));
+    document.addEventListener('pointerdown', e => { if (!sel.contains(e.target)) open(false); });
     TK.mountBoard($('[data-board-host="home"]', root), TK.parseFixture(TK.FIXTURES.start), { layout: 'h', interactive: false, uid: 'home' });
   };
 

@@ -12,7 +12,7 @@ All styles live in `components.css`; all values are tokens from `tokens.css`.
 | Logo | `.k-logo` | `__mark` (svg `#k-ornament`), `__name`, `__tagline` | `--inline` |
 | Page | `.k-page` | `__title`, `__lead`, `__note`, `__stack`, `__footer` | `--article`, `--wide`, `--center` |
 | SectionTitle | `.k-section-title` | — | — |
-| LanguageSelect | `.k-lang` | `__select` (native select) | — |
+| LanguageSelect | `.k-lang` | `__button` (Lucide globe, `__value`, `__chevron`), `__menu` (`role="listbox"`), `__option` | `__option--selected`; `__button[aria-expanded="true"]` |
 
 ## Controls
 | Component | Class | Parts | Modifiers / states |
