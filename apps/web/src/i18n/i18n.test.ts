@@ -20,7 +20,8 @@ const DEVIATIONS: Record<string, Partial<Record<'ru' | 'ky' | 'en', string>>> = 
   },
 };
 
-/** Strings the handoff does not have: online play (server errors, draw offers, cancelled games). */
+/** Strings the handoff does not have: online play (server errors, draw offers, cancelled games) and the
+    tutorial steps the handoff did not draw (only step 2 is designed). */
 const ADDED = [
   'online.notFound',
   'online.full',
@@ -31,6 +32,20 @@ const ADDED = [
   'over.cancelled',
   'over.reason.cancelled',
   'over.reason.agreed',
+  'tutorial.next',
+  'tutorial.playBot',
+  'tutorial.boardTitle',
+  'tutorial.boardText',
+  'tutorial.sowDone',
+  'tutorial.captureTitle',
+  'tutorial.captureText',
+  'tutorial.captureDone',
+  'tutorial.tuzdykTitle',
+  'tutorial.tuzdykText',
+  'tutorial.tuzdykDone',
+  'tutorial.winTitle',
+  'tutorial.winText',
+  'tutorial.winDone',
 ];
 
 describe('i18n', () => {

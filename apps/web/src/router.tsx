@@ -243,7 +243,7 @@ const routes = [
     <ProfileScreen data={{ ...DATA.me, stats: DATA.stats, history: DATA.history }} />
   )),
   page('/rules', RulesScreen),
-  page('/tutorial', TutorialScreen),
+  page('/tutorial', () => <TutorialScreen />),
   page('/settings', () => <Settings />),
 ];
 

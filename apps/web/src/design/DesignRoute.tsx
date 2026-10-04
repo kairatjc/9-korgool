@@ -191,7 +191,7 @@ export default function DesignRoute() {
       screen = <RulesScreen />;
       break;
     case 'tutorial':
-      screen = <TutorialScreen />;
+      screen = <TutorialScreen initialStep={1} />;
       break;
     case 'settings':
       screen = (
