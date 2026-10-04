@@ -305,7 +305,19 @@ export function GameScreen(p: GameScreenProps) {
   const [devSpeed, setDevSpeed] = useState<Speed>(env.speed);
   const [moved, setMoved] = useState(false);
   // In-game settings: the game stays mounted (hidden) underneath, see AppEnv.settings.
+  // They get their own history entry (same URL), so the browser's Back / the back gesture closes them;
+  // the in-app Back goes through history too, so no stale entry is left behind.
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const openSettings = () => {
+    window.history.pushState(window.history.state, '');
+    setSettingsOpen(true);
+  };
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const close = () => setSettingsOpen(false);
+    window.addEventListener('popstate', close);
+    return () => window.removeEventListener('popstate', close);
+  }, [settingsOpen]);
   const history = useRef<Snapshot[]>([]);
   // Online: number of moves played on this board (the next move's ply).
   const ply = useRef(p.online?.startPly ?? 0);
@@ -530,7 +542,7 @@ export function GameScreen(p: GameScreenProps) {
           <button
             className="k-icon-button"
             aria-label="Settings"
-            onClick={env.settings ? () => setSettingsOpen(true) : go('settings')}
+            onClick={env.settings ? openSettings : go('settings')}
           >
             <Settings />
           </button>
@@ -784,7 +796,7 @@ export function GameScreen(p: GameScreenProps) {
   return (
     <>
       {game}
-      {env.settings(() => setSettingsOpen(false))}
+      {env.settings(() => window.history.back())}
     </>
   );
 }
