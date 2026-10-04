@@ -78,6 +78,41 @@ test('tutorial: tapping pit 7 plays the move', async ({ page }) => {
   await expect(page.locator('.k-pit--legal')).toHaveCount(0);
 });
 
+for (const mode of ['local', 'bot'] as const)
+  test(`settings during a ${mode} game: Back returns to the same game`, async ({ page }) => {
+    await page.goto(`/game?mode=${mode}&side=white`);
+    await pit(page, 8).click();
+    await expect.poll(() => kazan(page, 'white')).toBe(10);
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await expect(page.locator('[data-screen="settings"]')).toBeVisible();
+    await page.getByRole('button', { name: 'Быстро' }).click();
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(page.locator('[data-screen="settings"]')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/game\?/);
+    await expect.poll(() => kazan(page, 'white')).toBe(10);
+    await expect(page.locator('.k-moves__row')).toHaveCount(1);
+    expect(await page.evaluate(() => localStorage.getItem('k.speed'))).toBe('fast');
+  });
+
+test('settings during a game: the browser Back closes them, the game stays', async ({ page }) => {
+  await page.goto('/');
+  await page.goto('/game?mode=local');
+  await pit(page, 8).click();
+  await expect.poll(() => kazan(page, 'white')).toBe(10);
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.locator('[data-screen="settings"]')).toBeVisible();
+  await page.goBack();
+  await expect(page.locator('[data-screen="settings"]')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/game\?mode=local$/);
+  await expect.poll(() => kazan(page, 'white')).toBe(10);
+  // The in-app Back left no extra entry: one more browser Back leaves the game.
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page.locator('[data-screen="settings"]')).toHaveCount(0);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+});
+
 test('language and speed settings persist', async ({ page }) => {
   await page.goto('/settings');
   await page.getByRole('button', { name: 'Кыргызча' }).click();

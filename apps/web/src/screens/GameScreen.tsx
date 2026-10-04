@@ -304,6 +304,20 @@ export function GameScreen(p: GameScreenProps) {
   const [over, setOver] = useState<GameOver | null>(p.over ?? null);
   const [devSpeed, setDevSpeed] = useState<Speed>(env.speed);
   const [moved, setMoved] = useState(false);
+  // In-game settings: the game stays mounted (hidden) underneath, see AppEnv.settings.
+  // They get their own history entry (same URL), so the browser's Back / the back gesture closes them;
+  // the in-app Back goes through history too, so no stale entry is left behind.
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const openSettings = () => {
+    window.history.pushState(window.history.state, '');
+    setSettingsOpen(true);
+  };
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const close = () => setSettingsOpen(false);
+    window.addEventListener('popstate', close);
+    return () => window.removeEventListener('popstate', close);
+  }, [settingsOpen]);
   const history = useRef<Snapshot[]>([]);
   // Online: number of moves played on this board (the next move's ply).
   const ply = useRef(p.online?.startPly ?? 0);
@@ -515,12 +529,21 @@ export function GameScreen(p: GameScreenProps) {
       ? t(`over.reason.${over.reason}`)
       : t(over.outcome === 'draw' ? 'over.reason.draw' : `over.reason.${over.reason}`);
 
-  return (
-    <section className="k-screen k-game" data-screen="game" data-component="GameScreen">
+  const game = (
+    <section
+      className="k-screen k-game"
+      data-screen="game"
+      data-component="GameScreen"
+      hidden={settingsOpen}
+    >
       <TopBar
         title={p.title}
         end={
-          <button className="k-icon-button" aria-label="Settings" onClick={go('settings')}>
+          <button
+            className="k-icon-button"
+            aria-label="Settings"
+            onClick={env.settings ? openSettings : go('settings')}
+          >
             <Settings />
           </button>
         }
@@ -768,5 +791,12 @@ export function GameScreen(p: GameScreenProps) {
         </div>
       )}
     </section>
+  );
+  if (!settingsOpen || !env.settings) return game;
+  return (
+    <>
+      {game}
+      {env.settings(() => window.history.back())}
+    </>
   );
 }

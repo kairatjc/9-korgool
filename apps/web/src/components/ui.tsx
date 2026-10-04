@@ -21,10 +21,16 @@ export function useGo() {
   };
 }
 
-export function BackButton({ to = 'home' }: { to?: ScreenId }) {
+export function BackButton({
+  to = 'home',
+  onBack,
+}: {
+  to?: ScreenId;
+  onBack?: (() => void) | undefined;
+}) {
   const go = useGo();
   return (
-    <button className="k-icon-button" aria-label="Back" onClick={go(to)}>
+    <button className="k-icon-button" aria-label="Back" onClick={onBack ?? go(to)}>
       <ArrowLeft />
     </button>
   );
@@ -48,18 +54,21 @@ export function InlineLogo() {
  */
 export function TopBar({
   back = 'home',
+  onBack,
   logo = true,
   title,
   end,
 }: {
   back?: ScreenId;
+  /** Replaces navigation to `back` (e.g. closing in-game settings). */
+  onBack?: (() => void) | undefined;
   logo?: boolean;
   title?: ReactNode;
   end?: ReactNode;
 }) {
   return (
     <header className="k-topbar" data-component="TopBar">
-      <BackButton to={back} />
+      <BackButton to={back} onBack={onBack} />
       {logo && <InlineLogo />}
       {title !== undefined ? (
         <div className="k-topbar__title">{title}</div>
