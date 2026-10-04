@@ -51,8 +51,21 @@ jobs:
       - uses: actions/checkout@v4
       - run: docker build --target server -t korgool-server .
       - run: docker build --target web -t korgool-web .
-      - name: Server image starts
+      - name: Server image starts and migrates the database
         run: |
-          docker run -d --name server -p 3000:3000 korgool-server
-          for i in $(seq 1 20); do curl -fsS http://localhost:3000/health && exit 0; sleep 1; done
+          docker network create korgool
+          docker run -d --name db --network korgool -e POSTGRES_USER=korgool -e POSTGRES_PASSWORD=ci postgres:16-alpine
+          for i in $(seq 1 30); do docker exec db pg_isready -U korgool && break; sleep 1; done
+          docker run -d --name server --network korgool -p 3000:3000 \
+            -e DATABASE_URL=postgres://korgool:ci@db:5432/korgool \
+            -e BETTER_AUTH_SECRET=ci-secret-ci-secret-ci-secret-ci-secret \
+            korgool-server
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:3000/health; then
+              curl -fsS -X POST -H 'content-type: application/json' -H 'origin: http://localhost:5173' \
+                -d '{}' http://localhost:3000/api/auth/sign-in/anonymous && exit 0
+              break
+            fi
+            sleep 1
+          done
           docker logs server && exit 1

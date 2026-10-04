@@ -3,21 +3,28 @@ import type {
   ClientToServerEvents,
   GameSnapshot,
   ServerToClientEvents,
-  Session,
 } from '@korgool/protocol';
 import { io as connect, type Socket } from 'socket.io-client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app';
+import { openDatabase, type Database } from '../src/db';
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 let app: ReturnType<typeof buildApp>['app'];
 let url: string;
 const clients: Client[] = [];
+let database: Database;
+
+beforeAll(async () => {
+  database = await openDatabase();
+});
+afterAll(() => database.close());
 
 beforeEach(async () => {
   ({ app } = buildApp({
     publicUrl: 'https://korgool.test',
+    db: database.db,
     timeouts: { firstMoveMs: 2_000, disconnectMs: 300 },
   }));
   await app.listen({ host: '127.0.0.1', port: 0 });
@@ -31,25 +38,43 @@ afterEach(async () => {
   await app.close();
 });
 
-/** Подключиться гостем; без токена сервер выдаёт новую сессию. */
-async function guest(token?: string): Promise<{ socket: Client; session: Session | null }> {
-  const socket: Client = connect(url, {
+interface Guest {
+  socket: Client;
+  /** Cookie сессии Better Auth. */
+  cookie: string;
+  name: string;
+}
+
+/** Войти гостем через Better Auth и подключиться с cookie сессии (или с уже выданной). */
+async function guest(cookie?: string): Promise<Guest> {
+  let name = '';
+  if (!cookie) {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/sign-in/anonymous',
+      headers: { origin: 'https://korgool.test' },
+      payload: {},
+    });
+    expect(res.statusCode).toBe(200);
+    name = (res.json() as { user: { name: string } }).user.name;
+    cookie = String(res.headers['set-cookie']).split(';')[0] as string;
+  }
+  const socket = connect(url, {
     transports: ['websocket'],
     forceNew: true,
-    auth: token ? { token } : {},
-  });
+    extraHeaders: { cookie },
+  }) as Client;
   clients.push(socket);
-  if (token) {
-    await new Promise<void>((resolve) => socket.once('connect', () => resolve()));
-    return { socket, session: null };
-  }
-  const session = await new Promise<Session>((resolve) => socket.once('session', resolve));
-  return { socket, session };
+  await new Promise<void>((resolve, reject) => {
+    socket.once('connect', () => resolve());
+    socket.once('connect_error', reject);
+  });
+  return { socket, cookie, name };
 }
 
 function next<E extends keyof ServerToClientEvents>(socket: Client, event: E) {
   return new Promise<Parameters<ServerToClientEvents[E]>[0]>((resolve) =>
-    socket.once(event as 'session', resolve as never),
+    socket.once(event as 'game:start', resolve as never),
   );
 }
 
@@ -85,10 +110,39 @@ describe('сервер партий', () => {
     expect(await res.json()).toEqual({ ok: true, games: 0 });
   });
 
-  it('гость получает сессию с ником', async () => {
-    const { session } = await guest();
-    expect(session?.player.name).toMatch(/^Гость_/);
-    expect(session?.token.length).toBeGreaterThan(20);
+  it('гость получает аккаунт с ником и cookie HttpOnly', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/auth/sign-in/anonymous',
+      headers: { origin: 'https://korgool.test' },
+      payload: {},
+    });
+    expect(res.json()).toMatchObject({ user: { name: expect.stringMatching(/^Гость_/) } });
+    expect(String(res.headers['set-cookie'])).toMatch(/HttpOnly/i);
+  });
+
+  it('без сессии подключение отклоняется', async () => {
+    const socket = connect(url, { transports: ['websocket'], forceNew: true }) as Client;
+    clients.push(socket);
+    const error = await new Promise<Error>((resolve) => socket.once('connect_error', resolve));
+    expect(error.message).toBe('unauthorized');
+  });
+
+  it('аккаунт гостя переживает перезапуск сервера', async () => {
+    const before = await guest();
+    const created = await send(before.socket, 'game:create', { timeControl: null, color: 'white' });
+    before.socket.disconnect();
+    await app.close();
+    ({ app } = buildApp({ publicUrl: 'https://korgool.test', db: database.db }));
+    await app.listen({ host: '127.0.0.1', port: 0 });
+    const address = app.server.address();
+    if (!address || typeof address === 'string') throw new Error('no address');
+    url = `http://127.0.0.1:${address.port}`;
+    const after = await guest(before.cookie);
+    const mine = await send(after.socket, 'game:create', { timeControl: null, color: 'white' });
+    const id = (r: Ack<Record<string, unknown>>) =>
+      r.ok ? (r['game'] as GameSnapshot).players.white?.id : r.error;
+    expect(id(mine)).toBe(id(created));
   });
 
   it('партия по ссылке: создать, войти, сходить', async () => {
@@ -133,7 +187,7 @@ describe('сервер партий', () => {
     ).toEqual({ ok: false, error: 'invalid_payload' });
   });
 
-  it('реконнект: тот же токен возвращает в партию', async () => {
+  it('реконнект: та же сессия возвращает в партию', async () => {
     const { a, b, gameId } = await startGame();
     await send(a.socket, 'game:move', { gameId, pit: 7, ply: 0 });
 
@@ -142,7 +196,7 @@ describe('сервер партий', () => {
     expect(await offline).toEqual({ gameId, online: false });
 
     const online = next(a.socket, 'opponent:status');
-    const back = await guest(b.session?.token);
+    const back = await guest(b.cookie);
     const rejoined = await send(back.socket, 'game:join', { gameId });
     expect(rejoined).toMatchObject({
       ok: true,

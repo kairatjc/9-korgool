@@ -1,17 +1,19 @@
 # Деплой
 
-Один VPS с Docker Compose: **Caddy** (HTTPS, статика клиента) и **сервер партий** (Node.js).
+Один VPS с Docker Compose: **Caddy** (HTTPS, статика клиента), **сервер партий** (Node.js)
+и **PostgreSQL** (аккаунты).
 Деплой — одна команда `docker compose up -d --build`; после настройки GitHub Actions
 выкатывает каждый зелёный коммит в `main` сам.
 
 ```
- Браузер ──HTTPS──▶ Caddy (web) ──/socket.io, /health──▶ server:3000
+ Браузер ──HTTPS──▶ Caddy (web) ──/socket.io, /api, /health──▶ server:3000 ──▶ db:5432 (PostgreSQL)
                       │
                       └── /, /assets/*, /g/… → статика клиента (SPA)
 ```
 
-Сейчас партии и гостевые сессии живут в памяти сервера: **перезапуск или деплой завершает
-идущие партии**. Это уйдёт со срезом «Хранение» (Redis + PostgreSQL на этом же сервере).
+Гостевые аккаунты хранятся в PostgreSQL (том `pg_data`) и переживают деплой. Идущие партии
+пока живут в памяти сервера: **перезапуск или деплой завершает их**. Это уйдёт, когда партии
+переедут в Redis (срез «Хранение»). Миграции базы сервер применяет сам при запуске.
 
 ## 1. Что нужно и сколько стоит
 
@@ -77,9 +79,14 @@ nano .env      # пример — .env.example в репозитории
 
 ```sh
 DOMAIN=9-korgool.kg
+POSTGRES_PASSWORD=...   # openssl rand -hex 32
+BETTER_AUTH_SECRET=...  # openssl rand -hex 32, другое значение
 SENTRY_DSN=
 VITE_SENTRY_DSN=
 ```
+
+`BETTER_AUTH_SECRET` подписывает cookie сессий: если его сменить, все гости получат новые
+аккаунты. `POSTGRES_PASSWORD` задаётся один раз: база запоминает его при первом запуске.
 
 ## 5. Первый деплой
 
@@ -129,8 +136,11 @@ cd /opt/korgool
 docker compose ps                  # состояние (у server есть healthcheck)
 docker compose logs -f server      # логи сервера партий
 docker compose restart server      # перезапуск (идущие партии завершатся)
+docker compose exec db psql -U korgool   # консоль базы
+docker compose exec db pg_dump -U korgool korgool | gzip > korgool-$(date +%F).sql.gz  # резервная копия
 docker system df                   # место под образы; чистит деплой: docker image prune
 ```
 
-Обновления ОС: `apt upgrade` раз в месяц; Hetzner Backups (+20 % к цене) пока не нужны —
-на сервере нет данных, кроме сертификатов Caddy.
+Обновления ОС: `apt upgrade` раз в месяц. В базе пока только гостевые аккаунты, потеря
+которых не страшна; когда появятся история партий и вход через Google, стоит включить
+Hetzner Backups (+20 % к цене) или ежедневный `pg_dump` по cron.

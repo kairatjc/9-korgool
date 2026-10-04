@@ -6,3 +6,4 @@ design
 apps/web/src/styles
 apps/web/test-results
 apps/web/playwright-report
+apps/server/drizzle/meta/
