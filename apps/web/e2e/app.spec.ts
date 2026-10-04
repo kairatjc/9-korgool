@@ -70,12 +70,43 @@ test('resign shows the result modal; rematch starts over', async ({ page }) => {
   await expect(page.locator('.k-pit--legal')).toHaveCount(9);
 });
 
-test('tutorial: tapping pit 7 plays the move', async ({ page }) => {
+test('tutorial: all five steps, each move as described', async ({ page }) => {
   await page.goto('/tutorial');
+  const coach = page.locator('.k-coach');
+  const next = page.getByRole('button', { name: 'Далее' });
+  // 1 — the board: nothing to tap.
+  await expect(coach.locator('.k-coach__step')).toHaveText('Шаг 1 из 5');
+  await expect(page.locator('.k-pit--legal')).toHaveCount(0);
+  await next.click();
+  // 2 — pit 7 from the start: the opponent's pit 6 gets 10 and is captured.
   await expect(page.locator('.k-pit--hint')).toHaveCount(1);
+  await expect(next).toHaveCount(0);
   await pit(page, 6).click();
   await expect.poll(() => count(page, 6)).toBe(1);
+  await expect.poll(() => kazan(page, 'white')).toBe(10);
   await expect(page.locator('.k-pit--legal')).toHaveCount(0);
+  await next.click();
+  // 3 — capture from pit 4.
+  await expect(coach.locator('.k-coach__step')).toHaveText('Шаг 3 из 5');
+  await pit(page, 3).click();
+  await expect.poll(() => kazan(page, 'white')).toBe(48);
+  await next.click();
+  // 4 — tuzdyk in the opponent's pit 3; Back and forth resets the step.
+  await page.getByRole('button', { name: 'Назад' }).click();
+  await expect(coach.locator('.k-coach__step')).toHaveText('Шаг 3 из 5');
+  await expect(page.locator('.k-pit--hint[data-index="3"]')).toHaveCount(1);
+  await pit(page, 3).click();
+  await next.click();
+  await pit(page, 4).click();
+  await expect(page.locator('.k-pit--tuzdyk-mine[data-index="11"]')).toHaveCount(1);
+  await next.click();
+  // 5 — 82 wins; the tutorial ends with a way into a game.
+  await expect(coach.locator('.k-coach__step')).toHaveText('Шаг 5 из 5');
+  await pit(page, 8).click();
+  await expect.poll(() => kazan(page, 'white')).toBe(82);
+  await expect(next).toHaveCount(0);
+  await page.getByRole('button', { name: 'Играть с ботом' }).click();
+  await expect(page).toHaveURL(/\/bot/);
 });
 
 for (const mode of ['local', 'bot'] as const)

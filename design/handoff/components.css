@@ -376,7 +376,7 @@ a:hover { color: var(--color-accent-hover); text-decoration: underline; }
 .k-coach__step { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-ink-inverse-muted); letter-spacing: var(--tracking-caps); }
 .k-coach__title { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-semibold); line-height: var(--leading-snug); }
 .k-coach__text { color: var(--color-ink-inverse-muted); font-size: var(--text-sm); text-wrap: pretty; }
-.k-coach__actions { display: flex; gap: var(--space-4); }
+.k-coach__actions { display: flex; flex-wrap: wrap; gap: var(--space-4); }
 .k-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--space-2); }
 .k-progress__seg { height: var(--size-progress); border-radius: var(--radius-full); background: var(--color-ink-inverse-track); }
 .k-progress__seg--done { background: var(--color-ink-inverse-muted); }
