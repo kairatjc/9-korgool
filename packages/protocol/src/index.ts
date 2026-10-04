@@ -166,10 +166,6 @@ export type DrawAnswerPayload = z.infer<typeof drawAnswerSchema>;
 
 // ─── Сервер → клиент ─────────────────────────────────────────────────────────
 
-/** Гостевая сессия: клиент сохраняет `token` и передаёт его в `auth.token` при подключении. */
-export const sessionSchema = z.object({ token: z.string(), player: playerSchema });
-export type Session = z.infer<typeof sessionSchema>;
-
 export const gameMovedSchema = z.object({
   gameId: gameIdSchema,
   pit: pitSchema,
@@ -236,7 +232,6 @@ export interface ClientToServerEvents {
 
 /** События, которые шлёт сервер. */
 export interface ServerToClientEvents {
-  session: (session: Session) => void;
   /** Второй игрок сел за доску — партия началась (обоим игрокам). */
   'game:start': (game: GameSnapshot) => void;
   'game:moved': (payload: GameMoved) => void;

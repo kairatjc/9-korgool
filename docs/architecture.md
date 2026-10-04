@@ -93,10 +93,12 @@ function parse(str: string): GameState;
 часы, предложение ничьей, кто онлайн, результат. Его возвращают `game:create` и `game:join`,
 поэтому отдельного события `game:sync` нет: после реконнекта клиент снова шлёт `game:join`.
 
-**Гостевая сессия.** При подключении клиент передаёт `auth: { token }`. Если токена нет или он
-неизвестен, сервер создаёт гостя со случайным ником и присылает `session` — клиент сохраняет токен
-и переподключается с ним. Пока сессии хранятся в памяти сервера; со срезом «Хранение» их заменят
-сессии Better Auth (cookie `HttpOnly`).
+**Гостевой аккаунт.** Игрок — пользователь Better Auth (плагин `anonymous`) в PostgreSQL.
+Сервер узнаёт его по cookie сессии `HttpOnly` в рукопожатии Socket.IO. Без сессии подключение
+отклоняется с ошибкой `unauthorized`; тогда клиент вызывает `POST /api/auth/sign-in/anonymous`
+(сервер создаёт гостя со случайным ником и ставит cookie) и подключается снова. Сессия живёт
+90 дней и продлевается при заходах, поэтому гость остаётся тем же игроком после перезапуска
+сервера и перезагрузки страницы. Вход через Google позже привяжется к тому же аккаунту.
 
 **Код партии** — 6 символов из `A–Z` и `2–9` без похожих `0/O`, `1/I`; он же код комнаты
 и часть ссылки `/g/AB23CD`.
@@ -111,13 +113,14 @@ function parse(str: string): GameState;
 ([rules.md §8](rules.md#8-контроль-времени-платформенные-правила)). Таймеры (флаг, отмена,
 отключение на 60 с) живут в процессе сервера; `OnlineGame` в `apps/server/src/game.ts`.
 
-**Сейчас (этап 2, срез 1)** активные партии и гостевые сессии хранятся в памяти одного процесса;
-Redis и PostgreSQL подключаются отдельным срезом.
+**Сейчас** аккаунты хранятся в PostgreSQL, а активные партии — в памяти одного процесса;
+Redis для них подключается отдельным шагом среза «Хранение».
 
 ## 5. Модель данных (PostgreSQL)
 
 ```
-users        (id, username, google_id, phone /* в планах, nullable */, avatar_url, country, locale, created_at, is_guest)
+user, session, account, verification   -- таблицы Better Auth (apps/server/src/schema.ts);
+             -- user: id, name, email, image, is_anonymous (гость), created_at; позже — phone, country, locale
 ratings      (user_id, time_class, rating, rd, volatility, games_count)   -- в планах, вместе с рейтингом
 games        (id, white_id, black_id, time_control, status, result, reason,
               moves TEXT,  -- "7 3 9 5 ..."

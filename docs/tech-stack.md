@@ -45,5 +45,6 @@
 ## Требования к окружению разработчика
 
 - Node.js 22 LTS, pnpm 9+
-- Docker (для PostgreSQL и Redis локально)
-- `pnpm dev` поднимает клиент и сервер, `docker compose up db redis` — инфраструктуру.
+- Docker — только для проверки продакшн-сборки (`docker compose`)
+- Сервер в разработке без `DATABASE_URL` берёт PGlite (PostgreSQL внутри процесса,
+  данные в `apps/server/.data`); тесты сервера тоже идут на PGlite в памяти.

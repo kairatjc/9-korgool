@@ -8,29 +8,28 @@ import {
   type ClientToServerEvents,
   type ErrorCode,
   type Player,
-  type Session,
   type ServerToClientEvents,
   type Side,
 } from '@korgool/protocol';
 import type { Server, Socket } from 'socket.io';
 import type { z } from 'zod';
+import { playerFromHeaders, type Auth } from './auth';
 import type { GameOutput, OnlineGame } from './game';
 import { GameRegistry, type GameRegistryOptions } from './games';
-import { GuestSessions } from './guests';
 import { Matchmaker } from './queue';
 
 interface SocketData {
   player: Player;
   /** Партии, к которым подключён этот сокет, и сторона игрока в них. */
   games: Map<string, Side>;
-  /** Сессия создана при этом подключении — клиенту нужно отправить токен. */
-  session: Session | null;
 }
 
 export type GameServer = Server<ClientToServerEvents, ServerToClientEvents, object, SocketData>;
 type GameSocket = Socket<ClientToServerEvents, ServerToClientEvents, object, SocketData>;
 
 export interface GameSocketOptions extends GameRegistryOptions {
+  /** Сессии Better Auth: игрок узнаётся по cookie в рукопожатии. */
+  auth: Auth;
   /** Адрес клиента для ссылок-приглашений: `${publicUrl}/g/AB12CD`. */
   publicUrl: string;
   /** Ошибка в обработчике события: в лог и Sentry. Клиент получает `server_error`. */
@@ -41,7 +40,6 @@ const sideRoom = (gameId: string, side: Side) => `${gameId}:${side}`;
 
 /** Подключает обработчики партий к серверу Socket.IO. */
 export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
-  const guests = new GuestSessions();
   const report = options.onError ?? ((error: unknown) => console.error(error));
 
   const outputFor = (gameId: string): GameOutput => ({
@@ -62,19 +60,25 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
   const queue = new Matchmaker();
   const userRoom = (playerId: string) => `user:${playerId}`;
 
-  // Гостевая сессия: по токену из `auth.token` или новая.
+  // Игрок — по cookie сессии Better Auth. Без сессии подключение отклоняется с `unauthorized`:
+  // клиент входит гостем (`/api/auth/sign-in/anonymous`) и подключается снова.
   io.use((socket, next) => {
-    const known = guests.get(socket.handshake.auth['token']);
-    const session = known ? null : guests.create();
-    socket.data.player = known ?? (session as Session).player;
-    socket.data.session = session;
-    socket.data.games = new Map();
-    next();
+    playerFromHeaders(options.auth, socket.request.headers).then(
+      (player) => {
+        if (!player) return next(new Error('unauthorized'));
+        socket.data.player = player;
+        socket.data.games = new Map();
+        next();
+      },
+      (error: unknown) => {
+        report(error, 'connect');
+        next(new Error('server_error'));
+      },
+    );
   });
 
   io.on('connection', (socket: GameSocket) => {
-    const { player, session } = socket.data;
-    if (session) socket.emit('session', session);
+    const { player } = socket.data;
     void socket.join(userRoom(player.id));
 
     /** Подписать сокет на комнаты партии и отметить игрока онлайн. */
@@ -146,7 +150,7 @@ export function attachGameHandlers(io: GameServer, options: GameSocketOptions) {
     return game ? fn(game) : fail('not_found');
   }
 
-  return { games, guests, queue };
+  return { games, queue };
 }
 
 const fail = (error: ErrorCode) => ({ ok: false, error }) as const;

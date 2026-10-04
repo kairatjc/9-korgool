@@ -1,4 +1,4 @@
-/* Connection to the game server (apps/server): guest session, games with a friend.
+/* Connection to the game server (apps/server): guest account, games with a friend.
    socket.io-client is loaded on demand, so offline modes do not pay for it. */
 import type { Pit } from '@korgool/engine';
 import type {
@@ -17,31 +17,45 @@ import type { Socket } from 'socket.io-client';
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-const TOKEN_KEY = 'k.token';
 const ACK_TIMEOUT = 10_000;
+const RETRY_MS = 3_000;
 
-function readToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
+/** Server origin: same origin by default (Vite proxies /socket.io and /api in dev); `VITE_SERVER_URL` overrides. */
+const SERVER_URL = (import.meta.env['VITE_SERVER_URL'] as string | undefined) || '';
+
+/** A guest account (Better Auth): the server sets an HttpOnly session cookie. */
+async function signInAsGuest(): Promise<void> {
+  const res = await fetch(`${SERVER_URL}/api/auth/sign-in/anonymous`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json' },
+    body: '{}',
+  });
+  // 400: this browser already has a guest session.
+  if (!res.ok && res.status !== 400) throw new Error(`sign-in failed: ${res.status}`);
 }
 
 let client: Promise<Client> | null = null;
 
-/** The shared socket. Same origin by default (Vite proxies /socket.io in dev); `VITE_SERVER_URL` overrides. */
+/** The shared socket. The player is known by the session cookie; without one the server answers `unauthorized`. */
 export function getSocket(): Promise<Client> {
   client ??= import('socket.io-client').then(({ io }) => {
-    const url = (import.meta.env['VITE_SERVER_URL'] as string | undefined) || undefined;
-    const opts = { auth: (cb: (data: object) => void) => cb({ token: readToken() }) };
-    const socket: Client = url ? io(url, opts) : io(opts);
-    socket.on('session', (session) => {
-      try {
-        localStorage.setItem(TOKEN_KEY, session.token);
-      } catch {
-        /* storage unavailable: a new guest after reload */
+    const opts = { withCredentials: true };
+    const socket: Client = SERVER_URL ? io(SERVER_URL, opts) : io(opts);
+    socket.on('connect_error', (error) => {
+      // Network errors reconnect by themselves; a rejection by the server does not.
+      if (socket.active) return;
+      if (error.message !== 'unauthorized') {
+        setTimeout(() => socket.connect(), RETRY_MS);
+        return;
       }
+      // No session yet (or it expired): sign in as a guest and connect again.
+      const retry = () =>
+        signInAsGuest().then(
+          () => socket.connect(),
+          () => setTimeout(retry, RETRY_MS),
+        );
+      void retry();
     });
     return socket;
   });
@@ -222,7 +236,7 @@ export function useOnlineGame(gameId: string): OnlineGame {
     void getSocket().then((s) => {
       if (!active) return;
       socket = s;
-      for (const [event, fn] of Object.entries(handlers)) s.on(event as 'session', fn as never);
+      for (const [event, fn] of Object.entries(handlers)) s.on(event as 'game:start', fn as never);
       s.on('connect', onConnect);
       s.on('disconnect', onDisconnect);
       setConnected(s.connected);
@@ -234,7 +248,7 @@ export function useOnlineGame(gameId: string): OnlineGame {
       active = false;
       if (!socket) return;
       for (const [event, fn] of Object.entries(handlers))
-        socket.off(event as 'session', fn as never);
+        socket.off(event as 'game:start', fn as never);
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
     };

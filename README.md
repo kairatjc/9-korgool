@@ -41,17 +41,20 @@ pnpm format      # Prettier
 pnpm design:serve  # прототип дизайна: http://127.0.0.1:4500/handoff/index.html
 pnpm --filter @korgool/web dev          # клиент: http://localhost:5173
 pnpm --filter @korgool/server dev       # сервер партий: http://localhost:3000 (PORT, PUBLIC_URL);
-                                        # клиент в dev проксирует к нему /socket.io
+                                        # клиент в dev проксирует к нему /socket.io и /api;
+                                        # без DATABASE_URL база — PGlite в apps/server/.data
+pnpm --filter @korgool/server db:generate  # миграция после правки apps/server/src/schema.ts
 pnpm --filter @korgool/web test:visual  # попиксельное сравнение с дизайном (Playwright)
-DOMAIN=localhost docker compose up -d --build  # весь сайт в Docker: https://localhost
+DOMAIN=localhost POSTGRES_PASSWORD=dev BETTER_AUTH_SECRET=$(openssl rand -hex 32) \
+  docker compose up -d --build  # весь сайт в Docker: https://localhost
 ```
 
 В dev-сборке клиента есть `/__design?screen=…` (экраны дизайна из фикстур) и `/__design/compare`
 (эталон и реализация рядом, наложение и разница).
 
-| Пакет                                    | Что внутри                                                                                    |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------- |
-| [`packages/engine`](packages/engine)     | `@korgool/engine` — правила игры: состояние, ходы, захват, туздук, конец партии, нотация      |
-| [`packages/protocol`](packages/protocol) | `@korgool/protocol` — Zod-схемы событий Socket.IO, общие типы клиента и сервера               |
-| [`apps/server`](apps/server)             | Сервер партий: Fastify + Socket.IO, гостевые сессии, ходы и часы на сервере (rules.md §8)     |
-| [`apps/web`](apps/web)                   | Веб-клиент: React + Vite, экраны из [дизайна](design/handoff/README.md), локальная игра и бот |
+| Пакет                                    | Что внутри                                                                                                 |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [`packages/engine`](packages/engine)     | `@korgool/engine` — правила игры: состояние, ходы, захват, туздук, конец партии, нотация                   |
+| [`packages/protocol`](packages/protocol) | `@korgool/protocol` — Zod-схемы событий Socket.IO, общие типы клиента и сервера                            |
+| [`apps/server`](apps/server)             | Сервер партий: Fastify + Socket.IO, гостевые аккаунты (Better Auth, PostgreSQL), ходы и часы (rules.md §8) |
+| [`apps/web`](apps/web)                   | Веб-клиент: React + Vite, экраны из [дизайна](design/handoff/README.md), локальная игра и бот              |

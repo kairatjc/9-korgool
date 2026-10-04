@@ -1,11 +1,31 @@
 # Продакшн: `docker compose up -d --build` на сервере (docs/deploy.md).
 # Сервер партий хранит партии в памяти, поэтому он один: без реплик.
 services:
+  # Аккаунты (и позже история партий). Данные — в томе pg_data.
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: korgool
+      POSTGRES_DB: korgool
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD в .env}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U korgool -d korgool']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   server:
     build: { context: ., target: server }
     restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
     environment:
       PUBLIC_URL: https://${DOMAIN:?задайте DOMAIN в .env}
+      DATABASE_URL: postgres://korgool:${POSTGRES_PASSWORD}@db:5432/korgool
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?задайте BETTER_AUTH_SECRET в .env}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
 
@@ -28,5 +48,6 @@ services:
       - caddy_config:/config
 
 volumes:
+  pg_data:
   caddy_data:
   caddy_config:

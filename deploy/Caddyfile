@@ -3,8 +3,11 @@
 {$DOMAIN} {
 	encode zstd gzip
 
-	# Сервер партий: Socket.IO (WebSocket и long-polling) и проверка здоровья.
+	# Сервер партий: Socket.IO (WebSocket и long-polling), вход (Better Auth) и проверка здоровья.
 	handle /socket.io/* {
+		reverse_proxy server:3000
+	}
+	handle /api/* {
 		reverse_proxy server:3000
 	}
 	handle /health {
