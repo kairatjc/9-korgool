@@ -113,8 +113,9 @@ function parse(str: string): GameState;
 ([rules.md §8](rules.md#8-контроль-времени-платформенные-правила)). Таймеры (флаг, отмена,
 отключение на 60 с) живут в процессе сервера; `OnlineGame` в `apps/server/src/game.ts`.
 
-**Сейчас** аккаунты хранятся в PostgreSQL, а активные партии — в памяти одного процесса;
-Redis для них подключается отдельным шагом среза «Хранение».
+**Сейчас** аккаунты и законченные партии хранятся в PostgreSQL (партия записывается сразу после
+`game:over`), а активные партии — в памяти одного процесса; Redis для них подключается
+отдельным шагом среза «Хранение».
 
 ## 5. Модель данных (PostgreSQL)
 
@@ -122,9 +123,11 @@ Redis для них подключается отдельным шагом ср�
 user, session, account, verification   -- таблицы Better Auth (apps/server/src/schema.ts);
              -- user: id, name, email, image, is_anonymous (гость), created_at; позже — phone, country, locale
 ratings      (user_id, time_class, rating, rd, volatility, games_count)   -- в планах, вместе с рейтингом
-games        (id, white_id, black_id, time_control, status, result, reason,
+games        (id UUID, code /* код партии, со временем повторяется */, kind /* friend | queue */,
+              white_id, black_id, initial_seconds, increment_seconds /* null — без часов */,
+              result, reason,
               moves TEXT,  -- "7 3 9 5 ..."
-              final_position TEXT, started_at, ended_at)
+              final_position TEXT /* нотация движка */, started_at, ended_at)
 friendships  (user_id, friend_id, status, created_at)   -- в планах, вместе с друзьями
 puzzles      (id, position, solution, difficulty)
 ```
