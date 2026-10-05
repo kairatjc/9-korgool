@@ -4,10 +4,12 @@ import type {
   GameSnapshot,
   ServerToClientEvents,
 } from '@korgool/protocol';
+import { eq } from 'drizzle-orm';
 import { io as connect, type Socket } from 'socket.io-client';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../src/app';
 import { openDatabase, type Database } from '../src/db';
+import { games } from '../src/schema';
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -42,12 +44,12 @@ interface Guest {
   socket: Client;
   /** Cookie сессии Better Auth. */
   cookie: string;
-  name: string;
+  id: string;
 }
 
 /** Войти гостем через Better Auth и подключиться с cookie сессии (или с уже выданной). */
 async function guest(cookie?: string): Promise<Guest> {
-  let name = '';
+  let id = '';
   if (!cookie) {
     const res = await app.inject({
       method: 'POST',
@@ -56,7 +58,7 @@ async function guest(cookie?: string): Promise<Guest> {
       payload: {},
     });
     expect(res.statusCode).toBe(200);
-    name = (res.json() as { user: { name: string } }).user.name;
+    id = (res.json() as { user: { id: string } }).user.id;
     cookie = String(res.headers['set-cookie']).split(';')[0] as string;
   }
   const socket = connect(url, {
@@ -69,7 +71,7 @@ async function guest(cookie?: string): Promise<Guest> {
     socket.once('connect', () => resolve());
     socket.once('connect_error', reject);
   });
-  return { socket, cookie, name };
+  return { socket, cookie, id };
 }
 
 function next<E extends keyof ServerToClientEvents>(socket: Client, event: E) {
@@ -225,6 +227,32 @@ describe('сервер партий', () => {
     const over = next(a.socket, 'game:over');
     await send(b.socket, 'game:draw-answer', { gameId, accept: true });
     expect(await over).toMatchObject({ result: 'draw', reason: 'draw_agreed' });
+  });
+
+  it('законченная партия записывается в историю', async () => {
+    const { a, b, gameId } = await startGame();
+    await send(a.socket, 'game:move', { gameId, pit: 7, ply: 0 });
+    const over = next(a.socket, 'game:over');
+    await send(b.socket, 'game:resign', { gameId });
+    await over;
+
+    const rows = await vi.waitFor(async () => {
+      const found = await database.db.select().from(games).where(eq(games.code, gameId));
+      expect(found).toHaveLength(1);
+      return found;
+    });
+    expect(rows[0]).toMatchObject({
+      kind: 'friend',
+      whiteId: a.id,
+      blackId: b.id,
+      initialSeconds: 300,
+      incrementSeconds: 3,
+      result: 'white_won',
+      reason: 'resign',
+      moves: '7',
+    });
+    expect(rows[0]?.finalPosition).toMatch(/\/b$/);
+    expect(rows[0]!.endedAt.getTime()).toBeGreaterThanOrEqual(rows[0]!.startedAt.getTime());
   });
 
   it('очередь подбора: двое получают партию 5+3 и входят в неё', async () => {

@@ -18,11 +18,13 @@ export interface GameRegistryOptions {
   finishedTtlMs?: number;
   /** Сколько ждать второго игрока, прежде чем удалить партию. */
   waitingTtlMs?: number;
+  /** Партия закончилась (после рассылки `game:over`): записать в историю. */
+  onFinished?: (game: OnlineGame) => void;
 }
 
 /**
- * Активные партии в памяти процесса. На следующих срезах этапа 2 состояние уедет в Redis,
- * а законченные партии — в PostgreSQL (architecture.md §5).
+ * Активные партии в памяти процесса; законченные уходят в историю (`onFinished`).
+ * Позже состояние активных партий уедет в Redis (architecture.md §5).
  */
 export class GameRegistry {
   private readonly games = new Map<string, OnlineGame>();
@@ -31,6 +33,7 @@ export class GameRegistry {
   private readonly timeouts: GameTimeouts;
   private readonly finishedTtlMs: number;
   private readonly waitingTtlMs: number;
+  private readonly onFinished: ((game: OnlineGame) => void) | undefined;
 
   constructor(
     private readonly outputFor: (gameId: string) => GameOutput,
@@ -40,6 +43,7 @@ export class GameRegistry {
     this.timeouts = options.timeouts ?? DEFAULT_TIMEOUTS;
     this.finishedTtlMs = options.finishedTtlMs ?? 10 * 60_000;
     this.waitingTtlMs = options.waitingTtlMs ?? 24 * 60 * 60_000;
+    this.onFinished = options.onFinished;
   }
 
   get size(): number {
@@ -82,6 +86,7 @@ export class GameRegistry {
         over: (payload) => {
           this.expireIn(id, this.finishedTtlMs);
           output.over(payload);
+          this.onFinished?.(game);
         },
       },
       this.scheduler,

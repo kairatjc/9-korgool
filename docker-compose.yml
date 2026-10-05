@@ -1,7 +1,7 @@
 # Продакшн: `docker compose up -d --build` на сервере (docs/deploy.md).
 # Сервер партий хранит партии в памяти, поэтому он один: без реплик.
 services:
-  # Аккаунты (и позже история партий). Данные — в томе pg_data.
+  # Аккаунты и история партий. Данные — в томе pg_data.
   db:
     image: postgres:16-alpine
     restart: unless-stopped

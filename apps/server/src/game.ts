@@ -66,6 +66,8 @@ export class OnlineGame {
   result: GameResult | null = null;
   reason: GameOverReason | null = null;
   drawOffer: Side | null = null;
+  /** Когда партия началась (оба игрока сели), мс. */
+  startedAt: number | null = null;
 
   /** Остаток времени на момент `turnStartedAt`, мс. */
   private readonly remaining: Record<Side, number>;
@@ -119,6 +121,7 @@ export class OnlineGame {
   start(): void {
     if (this.phase !== 'waiting' || !this.seats.white || !this.seats.black) return;
     this.phase = 'playing';
+    this.startedAt = this.scheduler.now();
     this.cancelFirstMove = this.scheduler.after(this.timeouts.firstMoveMs, () =>
       this.finish('cancelled', 'no_first_move'),
     );

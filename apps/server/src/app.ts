@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import { createAuth } from './auth';
 import type { Db } from './db';
 import type { GameTimeouts } from './game';
+import { saveFinishedGame } from './history';
 import { realScheduler, type Scheduler } from './scheduler';
 import { attachGameHandlers, type GameServer } from './socket';
 
@@ -28,14 +29,25 @@ export function buildApp(options: AppOptions) {
   const io: GameServer = new Server(app.server, {
     cors: { origin: options.publicUrl, credentials: true },
   });
+  const scheduler = options.scheduler ?? realScheduler;
+  const report = (error: unknown, event: string) => {
+    app.log.error({ err: error, event }, 'socket handler failed');
+    options.onError?.(error, event);
+  };
+  // Запись в историю идёт в фоне; при остановке сервера дожидаемся незаконченных.
+  const saving = new Set<Promise<void>>();
   const { games } = attachGameHandlers(io, {
     auth,
     publicUrl: options.publicUrl,
-    scheduler: options.scheduler ?? realScheduler,
+    scheduler,
     ...(options.timeouts ? { timeouts: options.timeouts } : {}),
-    onError: (error, event) => {
-      app.log.error({ err: error, event }, 'socket handler failed');
-      options.onError?.(error, event);
+    onError: report,
+    onFinished: (game) => {
+      const save = saveFinishedGame(options.db, game, scheduler.now()).catch((error: unknown) =>
+        report(error, 'history'),
+      );
+      saving.add(save);
+      void save.finally(() => saving.delete(save));
     },
   });
 
@@ -72,6 +84,7 @@ export function buildApp(options: AppOptions) {
   app.addHook('onClose', async () => {
     games.clear();
     await io.close();
+    await Promise.all(saving);
   });
 
   return { app, io, games, auth };

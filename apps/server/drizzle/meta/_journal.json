@@ -8,6 +8,13 @@
       "when": 1791134960170,
       "tag": "0000_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791138013865,
+      "tag": "0001_games",
+      "breakpoints": true
     }
   ]
 }
