@@ -1,19 +1,22 @@
 # Деплой
 
 Один VPS с Docker Compose: **Caddy** (HTTPS, статика клиента), **сервер партий** (Node.js)
-и **PostgreSQL** (аккаунты и история партий).
+**PostgreSQL** (аккаунты и история партий) и **Valkey** (Redis: идущие партии).
 Деплой — одна команда `docker compose up -d --build`; после настройки GitHub Actions
 выкатывает каждый зелёный коммит в `main` сам.
 
 ```
  Браузер ──HTTPS──▶ Caddy (web) ──/socket.io, /api, /health──▶ server:3000 ──▶ db:5432 (PostgreSQL)
+                                                                         └──▶ valkey:6379 (идущие партии)
                       │
                       └── /, /assets/*, /g/… → статика клиента (SPA)
 ```
 
-Гостевые аккаунты и законченные партии хранятся в PostgreSQL (том `pg_data`) и переживают деплой. Идущие партии
-пока живут в памяти сервера: **перезапуск или деплой завершает их**. Это уйдёт, когда партии
-переедут в Redis (срез «Хранение»). Миграции базы сервер применяет сам при запуске.
+Гостевые аккаунты и законченные партии хранятся в PostgreSQL (том `pg_data`), идущие партии —
+в Valkey (том `valkey_data`). Деплой и перезапуск сервера партии не обрывают: сервер сохраняет
+их перед остановкой и поднимает после запуска, игроки переподключаются сами, а время простоя
+на часах не засчитывается ([architecture.md §4](architecture.md)). Миграции базы сервер
+применяет сам при запуске.
 
 ## 1. Что нужно и сколько стоит
 
@@ -135,7 +138,7 @@ Workflow [`deploy.yml`](../.github/workflows/deploy.yml) после зелёно
 cd /opt/korgool
 docker compose ps                  # состояние (у server есть healthcheck)
 docker compose logs -f server      # логи сервера партий
-docker compose restart server      # перезапуск (идущие партии завершатся)
+docker compose restart server      # перезапуск (идущие партии продолжатся)
 docker compose exec db psql -U korgool   # консоль базы
 docker compose exec db pg_dump -U korgool korgool | gzip > korgool-$(date +%F).sql.gz  # резервная копия
 docker system df                   # место под образы; чистит деплой: docker image prune

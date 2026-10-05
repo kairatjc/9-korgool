@@ -5,6 +5,7 @@ import type { Db } from './db';
 import type { GameTimeouts } from './game';
 import { saveFinishedGame } from './history';
 import { realScheduler, type Scheduler } from './scheduler';
+import type { GameStore } from './store';
 import { attachGameHandlers, type GameServer } from './socket';
 
 export interface AppOptions {
@@ -14,6 +15,8 @@ export interface AppOptions {
   logger?: FastifyServerOptions['logger'];
   scheduler?: Scheduler;
   timeouts?: GameTimeouts;
+  /** Хранилище активных партий (Redis); без него партии живут только в памяти. */
+  store?: GameStore;
   onError?: (error: unknown, event: string) => void;
 }
 
@@ -42,6 +45,8 @@ export function buildApp(options: AppOptions) {
     scheduler,
     ...(options.timeouts ? { timeouts: options.timeouts } : {}),
     onError: report,
+    ...(options.store ? { store: options.store } : {}),
+    onStoreError: (error) => report(error, 'store'),
     onFinished: (game) => {
       const save = saveFinishedGame(options.db, game, scheduler.now()).catch((error: unknown) =>
         report(error, 'history'),
@@ -81,8 +86,14 @@ export function buildApp(options: AppOptions) {
 
   app.get('/health', async () => ({ ok: true, games: games.size }));
 
+  // Партии из хранилища поднимаются до того, как сервер начнёт принимать подключения.
+  app.addHook('onReady', async () => {
+    const restored = await games.restore();
+    if (restored) app.log.info({ restored }, 'games restored');
+  });
+
   app.addHook('onClose', async () => {
-    games.clear();
+    await games.close();
     await io.close();
     await Promise.all(saving);
   });

@@ -1,5 +1,5 @@
 # Продакшн: `docker compose up -d --build` на сервере (docs/deploy.md).
-# Сервер партий хранит партии в памяти, поэтому он один: без реплик.
+# Сервер партий держит таймеры партий в своём процессе, поэтому он один: без реплик.
 services:
   # Аккаунты и история партий. Данные — в томе pg_data.
   db:
@@ -17,14 +17,30 @@ services:
       timeout: 3s
       retries: 10
 
+  # Идущие партии: сервер сохраняет их после каждого хода и поднимает после перезапуска.
+  # AOF пишет данные на диск (том valkey_data), чтобы партии пережили и перезапуск Valkey.
+  valkey:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    command: ['valkey-server', '--appendonly', 'yes']
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   server:
     build: { context: ., target: server }
     restart: unless-stopped
     depends_on:
       db: { condition: service_healthy }
+      valkey: { condition: service_healthy }
     environment:
       PUBLIC_URL: https://${DOMAIN:?задайте DOMAIN в .env}
       DATABASE_URL: postgres://korgool:${POSTGRES_PASSWORD}@db:5432/korgool
+      REDIS_URL: redis://valkey:6379
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?задайте BETTER_AUTH_SECRET в .env}
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
@@ -49,5 +65,6 @@ services:
 
 volumes:
   pg_data:
+  valkey_data:
   caddy_data:
   caddy_config:

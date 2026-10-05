@@ -285,3 +285,82 @@ describe('снимок партии', () => {
     expect(game.snapshot('zzz').you).toBeNull();
   });
 });
+
+describe('перезапуск сервера', () => {
+  /** Сохранить партию, «перезапустить» сервер через `downtimeMs` и поднять её. */
+  function restart(game: OnlineGame, downtimeMs: number) {
+    const saved = JSON.parse(JSON.stringify(game.save()));
+    game.dispose();
+    clock.advance(downtimeMs);
+    sent = [];
+    return OnlineGame.restore(saved, recorder(), clock);
+  }
+
+  it('позиция, ходы и часы восстанавливаются; простой сервера не засчитывается', () => {
+    const game = started();
+    game.move('a', 7, 0);
+    clock.advance(10_000);
+    const back = restart(game, 120_000);
+    expect(back.snapshot('b')).toMatchObject({
+      phase: 'playing',
+      you: 'black',
+      moves: [7],
+      state: game.state,
+      clocks: { white: 303_000, black: 290_000, running: 'black' },
+      online: { white: false, black: false },
+    });
+    back.connect('white');
+    back.connect('black');
+    expect(back.move('b', 1, 1)).toEqual({ ok: true });
+  });
+
+  it('флаг после восстановления срабатывает по оставшемуся времени', () => {
+    const game = started();
+    game.move('a', 7, 0);
+    clock.advance(280_000);
+    const back = restart(game, 5_000);
+    back.connect('white');
+    back.connect('black');
+    clock.advance(19_999);
+    expect(back.phase).toBe('playing');
+    clock.advance(1);
+    expect(lastOver()).toMatchObject({ result: 'white_won', reason: 'timeout' });
+  });
+
+  it('кто не вернулся за 60 с — проиграл; не вернулся никто — партия отменена', () => {
+    const game = started();
+    game.move('a', 7, 0);
+    const back = restart(game, 1_000);
+    back.connect('black');
+    clock.advance(60_000);
+    expect(lastOver()).toMatchObject({ result: 'black_won', reason: 'disconnect' });
+
+    const other = started();
+    other.move('a', 7, 0);
+    const nobody = restart(other, 1_000);
+    clock.advance(60_000);
+    expect(nobody.result).toBe('cancelled');
+    expect(lastOver()).toMatchObject({ result: 'cancelled', reason: 'disconnect' });
+  });
+
+  it('без первого хода снова идёт таймер отмены', () => {
+    const back = restart(started(), 1_000);
+    back.connect('white');
+    back.connect('black');
+    clock.advance(30_000);
+    expect(lastOver()).toMatchObject({ result: 'cancelled', reason: 'no_first_move' });
+  });
+
+  it('законченная партия остаётся законченной', () => {
+    const game = started();
+    game.resign('b');
+    const back = restart(game, 1_000);
+    expect(back.snapshot('a')).toMatchObject({
+      phase: 'over',
+      result: 'white_won',
+      reason: 'resign',
+    });
+    clock.advance(120_000);
+    expect(sent).toEqual([]);
+  });
+});
