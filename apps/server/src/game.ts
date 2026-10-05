@@ -52,6 +52,26 @@ const fail = (error: ErrorCode) => ({ ok: false, error }) as const;
 type Phase = GameSnapshot['phase'];
 
 /**
+ * Партия для хранилища (Redis): всё, кроме таймеров и соединений.
+ * Позиция не хранится — она восстанавливается повтором ходов.
+ */
+export interface SavedGame {
+  id: string;
+  kind: GameKind;
+  timeControl: TimeControl;
+  seats: { white: Player | null; black: Player | null };
+  phase: Phase;
+  moves: Pit[];
+  result: GameResult | null;
+  reason: GameOverReason | null;
+  drawOffer: Side | null;
+  startedAt: number | null;
+  /** Остаток часов на момент `savedAt`, мс. */
+  remaining: Record<Side, number>;
+  savedAt: number;
+}
+
+/**
  * Онлайн-партия: места игроков, ход по правилам движка, серверные часы
  * и таймеры платформенных правил (флаг, отключение, отмена).
  *
@@ -90,6 +110,67 @@ export class OnlineGame {
   ) {
     const initialMs = (timeControl?.initial ?? 0) * 1000;
     this.remaining = { white: initialMs, black: initialMs };
+  }
+
+  /**
+   * Партия из хранилища после перезапуска сервера. Время, пока сервер не работал, игрокам
+   * не засчитывается: часы продолжают с остатка на момент сохранения. Все игроки пока
+   * отключены, поэтому у обоих идёт отсчёт отключения (rules.md §8). Кто не вернулся,
+   * проигрывает; если не вернулся никто, партия отменяется — виноватых нет.
+   */
+  static restore(
+    saved: SavedGame,
+    output: GameOutput,
+    scheduler: Scheduler,
+    timeouts: GameTimeouts = DEFAULT_TIMEOUTS,
+  ): OnlineGame {
+    const game = new OnlineGame(saved.id, saved.timeControl, output, scheduler, timeouts);
+    game.kind = saved.kind;
+    game.seats.white = saved.seats.white;
+    game.seats.black = saved.seats.black;
+    for (const pit of saved.moves) game.state = applyMove(game.state, pit).state;
+    game.moves.push(...saved.moves);
+    game.phase = saved.phase;
+    game.result = saved.result;
+    game.reason = saved.reason;
+    game.drawOffer = saved.drawOffer;
+    game.startedAt = saved.startedAt;
+    game.remaining.white = saved.remaining.white;
+    game.remaining.black = saved.remaining.black;
+    game.turnStartedAt = scheduler.now();
+    if (game.phase === 'playing') {
+      if (game.moves.length === 0) {
+        game.cancelFirstMove = scheduler.after(timeouts.firstMoveMs, () =>
+          game.finish('cancelled', 'no_first_move'),
+        );
+      } else {
+        game.scheduleFlag();
+      }
+      game.startDisconnectTimer('white', true);
+      game.startDisconnectTimer('black', true);
+    }
+    return game;
+  }
+
+  /** Состояние для хранилища; часы — на текущий момент. */
+  save(): SavedGame {
+    const clocks = this.clocks();
+    return {
+      id: this.id,
+      kind: this.kind,
+      timeControl: this.timeControl,
+      seats: { white: this.seats.white, black: this.seats.black },
+      phase: this.phase,
+      moves: [...this.moves],
+      result: this.result,
+      reason: this.reason,
+      drawOffer: this.drawOffer,
+      startedAt: this.startedAt,
+      remaining: clocks
+        ? { white: clocks.white, black: clocks.black }
+        : { white: this.remaining.white, black: this.remaining.black },
+      savedAt: this.scheduler.now(),
+    };
   }
 
   sideOf(playerId: string): Side | null {
@@ -280,10 +361,13 @@ export class OnlineGame {
     this.clearTimers();
   }
 
-  private startDisconnectTimer(side: Side): void {
+  /** `afterRestart` — оба игрока отключились из-за перезапуска сервера, а не по своей вине. */
+  private startDisconnectTimer(side: Side, afterRestart = false): void {
     this.cancelDisconnect[side]?.();
     this.cancelDisconnect[side] = this.scheduler.after(this.timeouts.disconnectMs, () =>
-      this.finish(winner(opponent(side)), 'disconnect'),
+      afterRestart && !this.isOnline(opponent(side))
+        ? this.finish('cancelled', 'disconnect')
+        : this.finish(winner(opponent(side)), 'disconnect'),
     );
   }
 

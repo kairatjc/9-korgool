@@ -42,7 +42,8 @@ pnpm design:serve  # прототип дизайна: http://127.0.0.1:4500/hand
 pnpm --filter @korgool/web dev          # клиент: http://localhost:5173
 pnpm --filter @korgool/server dev       # сервер партий: http://localhost:3000 (PORT, PUBLIC_URL);
                                         # клиент в dev проксирует к нему /socket.io и /api;
-                                        # без DATABASE_URL база — PGlite в apps/server/.data
+                                        # без DATABASE_URL база — PGlite в apps/server/.data,
+                                        # без REDIS_URL партии только в памяти
 pnpm --filter @korgool/server db:generate  # миграция после правки apps/server/src/schema.ts
 pnpm --filter @korgool/web test:visual  # попиксельное сравнение с дизайном (Playwright)
 DOMAIN=localhost POSTGRES_PASSWORD=dev BETTER_AUTH_SECRET=$(openssl rand -hex 32) \

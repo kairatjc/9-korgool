@@ -10,6 +10,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { buildApp } from '../src/app';
 import { openDatabase, type Database } from '../src/db';
 import { games } from '../src/schema';
+import { MemoryGameStore } from '../src/store';
 
 type Client = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -23,16 +24,31 @@ beforeAll(async () => {
 });
 afterAll(() => database.close());
 
-beforeEach(async () => {
+let store: MemoryGameStore;
+
+async function startServer(disconnectMs = 300) {
   ({ app } = buildApp({
     publicUrl: 'https://korgool.test',
     db: database.db,
-    timeouts: { firstMoveMs: 2_000, disconnectMs: 300 },
+    store,
+    timeouts: { firstMoveMs: 2_000, disconnectMs },
   }));
   await app.listen({ host: '127.0.0.1', port: 0 });
   const address = app.server.address();
   if (!address || typeof address === 'string') throw new Error('no address');
   url = `http://127.0.0.1:${address.port}`;
+}
+
+/** Перезапустить сервер с той же базой и тем же хранилищем партий. */
+async function restartServer() {
+  for (const c of clients.splice(0)) c.disconnect();
+  await app.close();
+  await startServer(2_000);
+}
+
+beforeEach(async () => {
+  store = new MemoryGameStore();
+  await startServer();
 });
 
 afterEach(async () => {
@@ -133,18 +149,33 @@ describe('сервер партий', () => {
   it('аккаунт гостя переживает перезапуск сервера', async () => {
     const before = await guest();
     const created = await send(before.socket, 'game:create', { timeControl: null, color: 'white' });
-    before.socket.disconnect();
-    await app.close();
-    ({ app } = buildApp({ publicUrl: 'https://korgool.test', db: database.db }));
-    await app.listen({ host: '127.0.0.1', port: 0 });
-    const address = app.server.address();
-    if (!address || typeof address === 'string') throw new Error('no address');
-    url = `http://127.0.0.1:${address.port}`;
+    await restartServer();
     const after = await guest(before.cookie);
     const mine = await send(after.socket, 'game:create', { timeControl: null, color: 'white' });
     const id = (r: Ack<Record<string, unknown>>) =>
       r.ok ? (r['game'] as GameSnapshot).players.white?.id : r.error;
     expect(id(mine)).toBe(id(created));
+  });
+
+  it('идущая партия переживает перезапуск сервера', async () => {
+    const { a, b, gameId } = await startGame();
+    await send(a.socket, 'game:move', { gameId, pit: 7, ply: 0 });
+    await restartServer();
+    expect(store.games.get(gameId)).toMatchObject({ phase: 'playing', moves: [7] });
+
+    const a2 = await guest(a.cookie);
+    const b2 = await guest(b.cookie);
+    expect(await send(a2.socket, 'game:join', { gameId })).toMatchObject({
+      ok: true,
+      game: { you: 'white', moves: [7], phase: 'playing' },
+    });
+    expect(await send(b2.socket, 'game:join', { gameId })).toMatchObject({
+      ok: true,
+      game: { you: 'black', online: { white: true, black: true } },
+    });
+    const moved = next(a2.socket, 'game:moved');
+    expect(await send(b2.socket, 'game:move', { gameId, pit: 1, ply: 1 })).toEqual({ ok: true });
+    expect(await moved).toMatchObject({ ply: 1, side: 'black' });
   });
 
   it('партия по ссылке: создать, войти, сходить', async () => {
