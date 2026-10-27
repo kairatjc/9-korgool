@@ -164,5 +164,8 @@
   "game.drawDecline": "Играть дальше",
   "over.cancelled": "Партия отменена",
   "over.reason.cancelled": "Первый ход не сделан за 30 секунд",
-  "over.reason.agreed": "Ничья по согласию"
+  "over.reason.agreed": "Ничья по согласию",
+  "rotate.title": "Поверните телефон",
+  "rotate.text": "Доска целиком помещается на экране, когда телефон лежит горизонтально.",
+  "rotate.continue": "Продолжить вертикально"
 }

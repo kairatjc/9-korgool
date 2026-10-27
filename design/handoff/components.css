@@ -508,3 +508,76 @@ a:hover { color: var(--color-accent-hover); text-decoration: underline; }
 .k-diagram__arrowhead { fill: var(--color-diagram-arrow); }
 .k-diagram__label-bg { fill: var(--color-preview); }
 .k-diagram__label { fill: var(--color-preview-ink); font-family: var(--font-ui); font-weight: var(--weight-semibold); font-size: var(--diagram-label-size); }
+
+/* ── Landscape phone ──────────────────────────── */
+/* A phone held sideways: a short, wide screen. The game gets one slim strip (back · opponent · moves · me ·
+   actions · settings) over the horizontal board; other screens keep their layout with a compact top bar. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .k-screen { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .k-topbar { height: var(--size-topbar); padding: 0 var(--space-5); gap: var(--space-5); }
+  .k-topbar__logo { display: flex; }
+  .k-topbar__title { text-align: left; font-size: var(--text-sm); }
+  .k-page { padding: var(--space-7) var(--space-9) var(--space-9); gap: var(--space-8); }
+  .k-page__title { font-size: var(--text-2xl); }
+
+  .k-home__body { max-width: none; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "logo actions" "board actions"; align-content: center; align-items: center; column-gap: var(--space-11); row-gap: var(--space-7); padding: var(--space-4) var(--space-10) var(--space-8); }
+  .k-home__actions { align-self: center; }
+  .k-home__logo { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; column-gap: var(--space-6); row-gap: var(--space-1); text-align: left; }
+  .k-home__logo .k-logo__mark { grid-row: span 2; }
+  .k-home__logo .k-logo__name { font-size: var(--text-2xl); }
+
+  .k-game { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto auto auto; grid-template-rows: var(--size-topbar) auto minmax(0, 1fr); grid-template-areas: "back opp me moves actions end" "banner banner banner banner banner banner" "board board board board board board"; column-gap: var(--space-4); }
+  .k-game .k-topbar, .k-game__body, .k-game__main, .k-game__side { display: contents; }
+  .k-game .k-topbar > .k-icon-button { grid-area: back; align-self: center; margin-left: var(--space-3); }
+  .k-game .k-topbar__logo, .k-game .k-topbar__title, .k-game .k-topbar__spacer { display: none; }
+  .k-game .k-topbar__end { grid-area: end; align-self: center; margin-right: var(--space-3); }
+  .k-game .k-banner { grid-area: banner; margin: 0 var(--space-7) var(--space-3); }
+  .k-game .k-player { align-self: center; padding: var(--space-2) var(--space-4); gap: var(--space-4); }
+  .k-game .k-player--opponent { grid-area: opp; justify-self: start; max-width: 100%; }
+  .k-game .k-player--me { grid-area: me; justify-self: end; max-width: 100%; flex-direction: row-reverse; }
+  .k-game .k-player--me .k-player__line { flex-direction: row-reverse; }
+  .k-game .k-player .k-avatar { width: var(--size-avatar-sm); height: var(--size-avatar-sm); font-size: var(--text-sm); }
+  .k-game .k-player__name { font-size: var(--text-sm); }
+  .k-game .k-player__side { display: none; }
+  .k-game .k-clock { font-size: var(--text-md); padding: var(--space-2) var(--space-4); border-radius: var(--radius-sm); }
+  .k-game .k-moves { grid-area: moves; align-self: center; }
+  .k-game .k-moves__strip { width: var(--size-tap); padding: 0; justify-content: center; }
+  .k-game .k-moves__strip-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .k-game .k-moves__strip > :last-child { display: none; }
+  .k-game .k-moves__header, .k-game .k-moves__list { display: none; }
+  .k-game .k-game__actions { grid-area: actions; align-self: center; display: flex; gap: var(--space-3); padding: 0; border: 0; }
+  .k-game .k-game__action { width: var(--size-tap); min-height: var(--size-tap); padding: 0; justify-content: center; }
+  .k-game .k-game__action-long { display: none; }
+  .k-game .k-game__action-short { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .k-game .k-game__board { grid-area: board; min-height: 0; padding: 0; aspect-ratio: auto; }
+  .k-game .k-game__board > .k-board-host, .k-tutorial .k-tutorial__board > .k-board-host { position: absolute; inset: var(--space-2) var(--space-7) var(--space-5); width: auto; height: auto; }
+  .k-modal { overflow-y: auto; place-items: safe center; padding: var(--space-5) var(--space-7); }
+  .k-modal__card { gap: var(--space-4); padding: var(--space-8) var(--space-8) var(--space-7); }
+  .k-modal--result .k-modal__mark { display: none; }
+  .k-game .k-sheet { left: 50%; right: auto; width: min(100%, var(--size-content)); transform: translateX(-50%); }
+
+  .k-tutorial__body { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: stretch; gap: var(--space-6); padding: 0 var(--space-7) var(--space-5) 0; }
+  .k-tutorial__board { order: -1; padding: 0; aspect-ratio: auto; min-height: 0; }
+  .k-coach { margin: 0; padding: var(--space-7); align-self: center; max-height: 100%; overflow-y: auto; }
+}
+
+/* ── RotateHint ───────────────────────────────── */
+/* A phone held upright: ask to turn it. «Continue upright» hides the hint on this device. */
+.k-rotate { position: fixed; inset: 0; z-index: calc(var(--z-devbar) + 1); display: none; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-7); padding: var(--space-10) var(--space-9); background: var(--color-bg); text-align: center; }
+.k-rotate__icon { width: var(--size-avatar-xl); height: var(--size-avatar-xl); display: grid; place-items: center; border-radius: var(--radius-full); background: var(--color-accent-soft); color: var(--color-accent); }
+.k-rotate__icon .lucide { width: var(--size-avatar-lg); height: var(--size-avatar-lg); animation: k-rotate-turn 2.4s var(--ease-standard) infinite; }
+.k-rotate__title { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.k-rotate__text { max-width: var(--size-content); color: var(--color-ink-muted); text-wrap: pretty; }
+@keyframes k-rotate-turn { 0%, 25% { transform: rotate(0deg); } 50%, 100% { transform: rotate(-90deg); } }
+@media (orientation: portrait) and (max-width: 767px) and (pointer: coarse) {
+  .k-rotate { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) { .k-rotate__icon .lucide { animation: none; transform: rotate(-90deg); } }
+
+/* ── Hot-seat turn ────────────────────────────── */
+/* Both players at one device: the plate of the side to move is lit, the other one is dimmed. */
+.k-player--hot-seat { border-radius: var(--radius-lg); box-shadow: inset 0 0 0 var(--border-thick) transparent; transition: background var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard); }
+.k-player--hot-seat { margin: 0 var(--space-4); }
+.k-player--hot-seat:not(.k-player--active) { opacity: var(--opacity-disabled); }
+.k-player--hot-seat.k-player--active { background: var(--color-accent-soft); box-shadow: inset 0 0 0 var(--border-thick) var(--color-accent); }
+@media (min-width: 768px) { .k-player--hot-seat { margin: 0; padding: var(--space-4) var(--space-7); } }

@@ -23,6 +23,9 @@ const DEVIATIONS: Record<string, Partial<Record<'ru' | 'ky' | 'en', string>>> = 
 /** Strings the handoff does not have: online play (server errors, draw offers, cancelled games) and the
     tutorial steps the handoff did not draw (only step 2 is designed). */
 const ADDED = [
+  'rotate.title',
+  'rotate.text',
+  'rotate.continue',
   'online.notFound',
   'online.full',
   'online.error',

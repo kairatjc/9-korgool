@@ -12,7 +12,7 @@ import {
 import { createContext, useContext, useMemo, useState } from 'react';
 import { AppContext, useApp, type AppEnv, type Params, type ScreenId } from './app';
 import { Sprite } from './board/Sprite';
-import type { SideKind } from './components/ui';
+import { RotateHint, type SideKind } from './components/ui';
 import { botMove, isBotLevel, type BotLevel } from './game/bot';
 import { DATA, fixture } from './game/fixtures';
 import { useT } from './i18n';
@@ -93,6 +93,7 @@ function Root() {
         <div className="k-app" id="app">
           <Outlet />
         </div>
+        <RotateHint />
       </AppContext.Provider>
     </SettingsContext.Provider>
   );
