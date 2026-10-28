@@ -164,5 +164,8 @@
   "game.drawDecline": "Keep playing",
   "over.cancelled": "Game cancelled",
   "over.reason.cancelled": "No first move within 30 seconds",
-  "over.reason.agreed": "Draw by agreement"
+  "over.reason.agreed": "Draw by agreement",
+  "rotate.title": "Turn your phone",
+  "rotate.text": "The whole board fits on the screen when the phone is held sideways.",
+  "rotate.continue": "Continue upright"
 }

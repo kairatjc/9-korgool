@@ -38,6 +38,18 @@ function storedPrefs(): Prefs {
   }
 }
 
+/** «Continue upright» was chosen on the turn-your-phone hint: it is not shown on this device again. */
+export function useUpright(): [boolean, () => void] {
+  const [upright, setUpright] = useState(() => read('k.upright') === '1');
+  return [
+    upright,
+    () => {
+      write('k.upright', '1');
+      setUpright(true);
+    },
+  ];
+}
+
 export function useSettings() {
   const [lang, setLangState] = useState<Lang>(() => {
     const l = storedLang();

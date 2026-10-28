@@ -196,6 +196,7 @@ function PlayerPlate({
   noClock,
   clock,
   clockClass,
+  hotSeat,
   t,
 }: {
   who: 'me' | 'opponent';
@@ -206,6 +207,8 @@ function PlayerPlate({
   noClock: boolean;
   clock: string;
   clockClass: string;
+  /** Both players at this device: the side to move gets «Your turn» and a lit plate. */
+  hotSeat: boolean;
   t: T;
 }) {
   const cls = [
@@ -214,6 +217,7 @@ function PlayerPlate({
     active && 'k-player--active',
     offline && 'k-player--offline',
     noClock && 'k-player--no-clock',
+    hotSeat && 'k-player--hot-seat',
   ];
   return (
     <div className={cls.filter(Boolean).join(' ')} data-component="PlayerPlate" data-player={who}>
@@ -223,7 +227,7 @@ function PlayerPlate({
       <div className="k-player__info">
         <div className="k-player__line">
           <span className="k-player__name">{person.name}</span>
-          {who === 'me' ? (
+          {who === 'me' || hotSeat ? (
             <span className="k-badge k-badge--accent k-player__turn">{t('game.yourTurn')}</span>
           ) : (
             <>
@@ -566,6 +570,7 @@ export function GameScreen(p: GameScreenProps) {
             noClock={noClock}
             clock={clockOpp}
             clockClass={clockCls(oppTurn && !oppOffline)}
+            hotSeat={!!p.hotSeat}
             t={t}
           />
           <div className="k-game__board">
@@ -590,6 +595,7 @@ export function GameScreen(p: GameScreenProps) {
             noClock={noClock}
             clock={clockMe}
             clockClass={clockCls(mine, lowTime)}
+            hotSeat={!!p.hotSeat}
             t={t}
           />
         </div>

@@ -1,5 +1,5 @@
 /* Shared app-shell pieces. Markup and classes follow design/handoff/index.html one-to-one. */
-import { ArrowLeft, Bot, Check, ChevronDown, Globe } from 'lucide-react';
+import { ArrowLeft, Bot, Check, ChevronDown, Globe, Smartphone } from 'lucide-react';
 import {
   useEffect,
   useRef,
@@ -11,6 +11,7 @@ import {
 import { useApp, type Params, type ScreenId } from '../app';
 import { Ornament } from '../board/Sprite';
 import { LANGS, useT, type Lang } from '../i18n';
+import { useUpright } from '../settings';
 
 /** Navigation handler for buttons / links: `onClick={useGo()('home')}`. */
 export function useGo() {
@@ -33,6 +34,25 @@ export function BackButton({
     <button className="k-icon-button" aria-label="Back" onClick={onBack ?? go(to)}>
       <ArrowLeft />
     </button>
+  );
+}
+
+/** Full-screen «turn your phone» hint; CSS shows it only on an upright phone (landscape section of components.css). */
+export function RotateHint() {
+  const t = useT();
+  const [upright, keepUpright] = useUpright();
+  if (upright) return null;
+  return (
+    <div className="k-rotate" data-component="RotateHint" role="dialog" aria-modal="true">
+      <span className="k-rotate__icon">
+        <Smartphone />
+      </span>
+      <h2 className="k-rotate__title">{t('rotate.title')}</h2>
+      <p className="k-rotate__text">{t('rotate.text')}</p>
+      <button className="k-button" onClick={keepUpright}>
+        {t('rotate.continue')}
+      </button>
+    </div>
   );
 }
 

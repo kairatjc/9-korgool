@@ -178,3 +178,40 @@ test('hot-seat with «flip board» on: the board turns to the side to move', asy
   await expect(page.locator('.k-player--me .k-player__name')).toHaveText('Чёрные');
   await expect(page.locator('.k-player--me.k-player--active')).toHaveCount(1);
 });
+
+test.describe('phone held sideways', () => {
+  test.use({ viewport: { width: 667, height: 375 }, isMobile: true, hasTouch: true });
+
+  test('game: horizontal board under one strip, everything on screen', async ({ page }) => {
+    await page.goto('/game?mode=local');
+    await expect(page.locator('.k-board--h')).toHaveCount(1);
+    await expect(page.locator('[data-component="RotateHint"]')).toBeHidden();
+    const board = await page.locator('.k-board').boundingBox();
+    const plate = await page.locator('.k-player--me').boundingBox();
+    expect(board && plate && plate.y + plate.height <= board.y).toBe(true);
+    expect(
+      board && board.y + board.height <= 375 && board.x >= 0 && board.x + board.width <= 667,
+    ).toBe(true);
+    // Same device: the side to move has the lit plate.
+    await expect(page.locator('.k-player--me.k-player--hot-seat.k-player--active')).toHaveCount(1);
+    await pit(page, 8).click();
+    await expect(page.locator('.k-player--opponent.k-player--active')).toHaveCount(1);
+  });
+});
+
+test.describe('phone held upright', () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  test('turn-your-phone hint on every screen until «Continue upright»', async ({ page }) => {
+    const hint = page.locator('[data-component="RotateHint"]');
+    await page.goto('/rules');
+    await expect(hint).toBeVisible();
+    await page.goto('/game?mode=local');
+    await expect(hint).toBeVisible();
+    await page.getByRole('button', { name: 'Продолжить вертикально' }).click();
+    await expect(hint).toHaveCount(0);
+    await expect(page.locator('.k-board--v')).toHaveCount(1);
+    await page.reload();
+    await expect(hint).toHaveCount(0);
+  });
+});
